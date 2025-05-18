@@ -3,9 +3,9 @@
 #+ipynb-newcell
 
 * Project Statement
-**Use current stock data to create two potentially profitable investment portfolios. One that is higher risk and one that is lower risk.**
+*Use current stock data to create two potentially profitable investment portfolios. One that is higher risk and one that is lower risk.*
 
-**You are to explain your interpretation of a high risk profile and low risk profile of a portfolio. You should provide some measurable quantitative data in you explanation.**
+*You are to explain your interpretation of a high risk profile and low risk profile of a portfolio. You should provide some measurable quantitative data in you explanation.*
 
 #+ipynb-newcell
 * Portfolio Choice and Motivation
