@@ -1,0 +1,31 @@
+#+title: Quant Finance Mini Project 1
+#+author: Aatmun Baxi
+#+ipynb-newcell
+
+* Project Statement
+**Use current stock data to create two potentially profitable investment portfolios. One that is higher risk and one that is lower risk.**
+
+**You are to explain your interpretation of a high risk profile and low risk profile of a portfolio. You should provide some measurable quantitative data in you explanation.**
+
+#+ipynb-newcell
+* Portfolio Choice and Motivation
+It is well documented that investors that invest for consumption goals in the long term (i.e. to fund consumption >10 years from the beginning of investment) can maximize expected return and minimize risk—as defined by volatility and probability of (un)realized capital loss—by holding broadly diversified, low cost index funds of risky assests with expected returns in excess of 3 month US treasury bills.
+Furthermore, it is financial dogma to hold differing proportions of the more "risky" stocks and "safer" bonds according to how close the investor is to their date of their consumption beginning.
+
+We take the persona of a young investor, defined as an investor entering a risky portfolio of stocks and bonds to fund consumption occurring a least 25 years in the future.
+We accept the dogma of investing in low cost, total market index funds to hold long term, and base /both/ of our portfolios on the following assumptions:
+
+1. Invest in low cost, total market index funds at a 90% stock/10% bond split
+2. Stocks should be diversified globally
+3. The bond portion will be zero coupon 25+ year Treasury STRIPS
+
+The rationale for minimizing cost is self-evident, and we introduce a 10% bond allocation due to its curtailing of psychological risk and improving of risk-adjusted returns.
+Our duration exposure to the bonds should be in line with our consumption timeline.
+As such, we adopt ultra-long dated Treasury STRIPS, as opposed to a total bond market fund, which would have an average duration in the intermediate length of ~6 years.
+It has been demonstrated that STRIPS have lower correlation with stocks, and would provide a stronger diversification benefit, which is desirable in our framework.
+
+Our "low risk" portfolio will consist of 90% VT and 10% ZROZ.
+
+#+ipynb-newcell
+* Risk Factors and Sources of Increased Risk
+In Capital Asset Pricing Model (CAPM), the "low" risk portfolio

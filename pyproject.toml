@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "Erdos Summer 2025 Qaunt Finance Projects"
+version = "0.1.0"
+description = ""
+authors = ["Aatmun Baxi abaxi@tamu.edu"]
+readme = "README.org"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
