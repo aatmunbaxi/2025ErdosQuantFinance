@@ -92,23 +92,15 @@ We will use the Dimensional funds' DFSVX and DISVX as our representative tickers
 We will compare the volatility of these funds against their respective geography's total stock markets.
 Because the total stock market funds represent a larger basket of stocks, we expect the volatility to be lower than for small cap value.
 
-#+begin_src jupyter-python :session py
+#+begin_src jupyter-python :session mini1
 %matplotlib inline
-import matplotlib.pyplot as p
+import matplotlib.pyplot as plt
+import pandas as pd
+import yfinance as yf
 import numpy as np
 #+end_src
 
 #+RESULTS:
-
-#+begin_src jupyter-python :session py
-def foo(x):
-      return x + 9
-
-[foo(x) + 7 for x in range(17)]
-#+end_src
-
-#+RESULTS:
-| 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 |
 
 # Local Variables:
 # eval: (setq! jupyter-executable (executable-find "jupyter"))
