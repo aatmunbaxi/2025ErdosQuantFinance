@@ -1,0 +1,7 @@
+#+title: Erdos Institute Summer 2025 Quant Finance Boot Camp
+#+author: Aatmun Baxi
+#+language: en
+
+The dependencies of this project can be built on system with the nix package manager with flakes enabled.
+Install =direnv= and run =direnv allow= in each directory containing =.envrc= to install and load the dependencies.
+The programs and python packages listed in =flake.nix= will be installed and available.
