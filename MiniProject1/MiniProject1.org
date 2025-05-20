@@ -15,17 +15,101 @@ Furthermore, it is financial dogma to hold differing proportions of the more "ri
 We take the persona of a young investor, defined as an investor entering a risky portfolio of stocks and bonds to fund consumption occurring a least 25 years in the future.
 We accept the dogma of investing in low cost, total market index funds to hold long term, and base /both/ of our portfolios on the following assumptions:
 
-1. Invest in low cost, total market index funds at a 90% stock/10% bond split
+1. Invest in total market index funds at a 90% stock/10% bond split
 2. Stocks should be diversified globally
 3. The bond portion will be zero coupon 25+ year Treasury STRIPS
 
-The rationale for minimizing cost is self-evident, and we introduce a 10% bond allocation due to its curtailing of psychological risk and improving of risk-adjusted returns.
-Our duration exposure to the bonds should be in line with our consumption timeline.
+We  introduce a 10% bond allocation due to its curtailing of psychological risk and improving of risk-adjusted returns.
+Moreover, our duration exposure to the bonds should be in line with our consumption timeline.
 As such, we adopt ultra-long dated Treasury STRIPS, as opposed to a total bond market fund, which would have an average duration in the intermediate length of ~6 years.
-It has been demonstrated that STRIPS have lower correlation with stocks, and would provide a stronger diversification benefit, which is desirable in our framework.
+It has been demonstrated that STRIPS have lower correlation with stocks than intermediate date bonds, and would provide a stronger diversification benefit, which is desirable in our framework.
+We will give empirical evidence for this fact.
 
-Our "low risk" portfolio will consist of 90% VT and 10% ZROZ.
+Our "low risk" portfolio will consist of 90% global stocks at *current* market cap weights and 10% 25+ year US Treasury STRIPS.
+
+| Asset             |  % |
+|-------------------+----|
+| Total US Stock    | 57 |
+| Total ex-US Stock | 33 |
+| 25+ STRIPS        | 10 |
+
+The choice of using current market cap weights for the US and ex-US geographies is to make the portfolio comparable to the high risk portfolio.
 
 #+ipynb-newcell
-* Risk Factors and Sources of Increased Risk
-In Capital Asset Pricing Model (CAPM), the "low" risk portfolio
+* Risk Factors as Sources of Increased Risk
+In Capital Asset Pricing Model (CAPM), the "low" risk portfolio would be nearly the riskiest portfolio one can come up with, when only compensated risks are accounted for.
+A compensated risk is a source of risk that an investor can expect to be compensated for, while an investor taking on uncompensated risk cannot expect to increase their returns for doing so.
+Examples of uncompensated risks are concentration risk, where assets are highly concentrated into one asset (e.g. a particular stock), and idiosyncratic country risk, where one concentrates their stock holdings in a particular country's stock market.
+
+The common thread of uncompensated risk is that they can be eliminated with diversification, something that the "optimal" portfolio in the CAPM model supports.
+Our portfolios will also strive to take on only compensated risks, but short of having a 100% stock allocation, our "low risk" portfolio is already about as risky as we can get.
+One then wonders, how can we take on more *compensated* risk to produce a higher risk portfolio than the one we have already?
+
+The work of Eugene Fama and Kenneth French provide a possible answer.
+In short, Fama and French observed excess alpha (broadly-occurring return in excess of the market portfolio) in certain stocks that the CAPM could not explain.
+Statistically, the CAPM could only explain 70% of the returns a diversified portfolio of stocks.
+Fama and French sought to modify the pricing model to explain more of the returns.
+
+Summarizing their body of research, they proposed two additional /risk factors/: the size risk factor and value risk factor.
+By measuring a diversified stock portfolio's exposure to companies with smaller size (known as "small cap" companies) and with lower price-to-book values (known as "value" companies), Fama and French were able to increase the explanatory power of the CAPM from 70% to >90% with their additional risk factors.
+Their model is called the Fama-French three-factor model.
+
+The risk factors in this model are
+1. Market beta (exposure to diversified stock)
+2. Size
+3. Value
+
+It should be noted that the model improves on the CAPM /empirically/ in how it explains returns, but past returns do not predict the future.
+However, there are good reasons to believe thse addition risk factors should be compensated ones.
+
+#+ipynb-newcell
+* The High Risk Portfolio
+The three factor model predicts that a portfolio with higher exposure to small cap companies and value companies can give returns higher than the market portfolio.
+This is the basis for our high risk portfolio.
+
+Sticking with the 90/10 stock/STRIPS allocation, we allocate 50% of each of our geography's stock markets to small cap value companies in that geography.
+
+For example, at current market capitalizations, US stocks consist of approximately 64% of the world's free-float market capitalization, with ex-US contributing the remaining 36%.
+In our low risk portfolio, we allocated 90% of our assets to this split, so our geography breakdown would be \(0.9\ast 0.64 = 57\%\) total US market, and \(0.9\ast 0.36 = 33\%\) total ex-US stock market.
+
+In our high risk portfolio, these would be halved to \(28\% \) and \(17\%\) for US and ex-US total market, respectively, making way for \(29\%\) and \(16\%\) US and ex-US small cap value, respectively.
+
+The choice of \(50\% \) dedicated to small cap value in each geography is somewhat arbitrary, and is likely considered a very aggressive tilt to the size and value factors.
+Our high risk portfolio is then
+| Asset                 |  % |
+|-----------------------+----|
+| Total US Stock        | 28 |
+| US Small Cap Value    | 29 |
+| Total ex-US Stock     | 29 |
+| ex-US Small Cap Value | 16 |
+| 25+ STRIPS            | 10 |
+#+ipynb-newcell
+* Risk of Small Cap Value
+Though we have used the three factor model to incorporate new sources of risk into our high risk portfolio, it turns out that we have incorporated assets that have higher risk even in traditional metrics of risk such as volatitily.
+Let us demonstrate this empirically.
+
+We will use the Dimensional funds' DFSVX and DISVX as our representative tickers for US small cap value and ex-US small cap value, respectively.
+We will compare the volatility of these funds against their respective geography's total stock markets.
+Because the total stock market funds represent a larger basket of stocks, we expect the volatility to be lower than for small cap value.
+
+#+begin_src jupyter-python :session py
+%matplotlib inline
+import matplotlib.pyplot as p
+import numpy as np
+#+end_src
+
+#+RESULTS:
+
+#+begin_src jupyter-python :session py
+def foo(x):
+      return x + 9
+
+[foo(x) + 7 for x in range(17)]
+#+end_src
+
+#+RESULTS:
+| 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 |
+
+# Local Variables:
+# eval: (setq! jupyter-executable (executable-find "jupyter"))
+# End:
