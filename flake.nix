@@ -14,7 +14,7 @@
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
           venvDir = ".venv";
-          packages = with pkgs; [ poetry gnumake  python311 ] ++ (with python311Packages; [
+          packages = with pkgs; [ gnumake  python311 ] ++ (with python311Packages; [
             # ipykernel
             # jupyter-client
             # jupyter-console
