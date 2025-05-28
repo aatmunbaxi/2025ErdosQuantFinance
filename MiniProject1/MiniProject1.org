@@ -89,10 +89,158 @@ Though we have used the three factor model to incorporate new sources of risk in
 Let us demonstrate this empirically.
 
 We will use the Dimensional funds' DFSVX and DISVX as our representative tickers for US small cap value and ex-US small cap value, respectively.
-We will compare the volatility of these funds against their respective geography's total stock markets.
-Because the total stock market funds represent a larger basket of stocks, we expect the volatility to be lower than for small cap value.
+We will compare the volatility of these funds against their respective geography's total stock markets, represented by =VTI= and =VXUS= for US and ex-US.
 
-#+begin_src jupyter-python :session mini1
+In order to capture the *total* return of these assets, we choose to use data from [[https://testfol.io][testfolio]], a portfolio backtesting tool that captures total returns of a portfolio, not just price action like Yahoo Finance.
+The data we load gives the hypothetical growth of 4 portfolios, each invested 100% into one of the assets above.
+
+#+begin_src jupyter-python :session MiniProject1
+import datetime as dt
+us_exus = pd.read_csv("./us-exus.csv")
+# us_exus.index = pd.to_datetime(us_exus["Date"])
+us_exus.set_index(pd.to_datetime(us_exus["Date"]),inplace=True)
+us_exus.drop("Date",axis=1,inplace=True)
+us_exus.plot(rot=70)
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: xlabel='Date'>
+[[file:./.ob-jupyter/834561ca30bf12f12c03791a8a0eeca063f89556.png]]
+:END:
+#+ipynb-newcell
+#+begin_src jupyter-python :session MiniProject1
+day_returns = (us_exus.shift(1) -us_exus) / us_exus
+day_returns.describe()
+#+end_src
+
+#+RESULTS:
+#+begin_export html
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>DFSVX</th>
+      <th>VTISIM</th>
+      <th>DISVX</th>
+      <th>VXUSSIM</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>7651.000000</td>
+      <td>7651.000000</td>
+      <td>7651.000000</td>
+      <td>7651.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>-0.000310</td>
+      <td>-0.000329</td>
+      <td>-0.000236</td>
+      <td>-0.000150</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>0.014256</td>
+      <td>0.012106</td>
+      <td>0.010205</td>
+      <td>0.011621</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>-0.095405</td>
+      <td>-0.102305</td>
+      <td>-0.082483</td>
+      <td>-0.108270</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>-0.007275</td>
+      <td>-0.006124</td>
+      <td>-0.005561</td>
+      <td>-0.005997</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>-0.001066</td>
+      <td>-0.000791</td>
+      <td>-0.000592</td>
+      <td>-0.000673</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>0.006148</td>
+      <td>0.004571</td>
+      <td>0.004290</td>
+      <td>0.004984</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>0.150000</td>
+      <td>0.140214</td>
+      <td>0.110549</td>
+      <td>0.115700</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+#+end_export
+#+ipynb-newcell
+With the data of daily returns in hand, we can compare volatilities over the period from June 1996 to today.
+#+ipynb-newcell
+#+begin_src jupyter-python :session MiniProject1
+import numpy as np
+log_returns = np.log(day_returns+1).dropna()
+# log_returns.describe()
+np.sqrt(252)*log_returns.describe().loc["std"]
+#+end_src
+
+#+RESULTS:
+: DFSVX      0.225398
+: VTISIM     0.191638
+: DISVX      0.161345
+: VXUSSIM    0.183918
+: Name: std, dtype: float64
+
+#+ipynb-newcell
+One can see that the volatility of returns of US small cap value is higher than the total stock market index, while it is slightly lower in the ex-US geography.
+In this sense, adding these assets to the low risk portfolio increases the volatility, making it higher risk in traditional metrics.
+We can also visually inspect a histogram of daily returns and see how they are distributed.
+#+ipynb-newcell
+#+begin_src jupyter-python :session MiniProject1
+day_returns.plot(kind="hist",bins=70,xlabel = "Return",
+                 xlim=(-.035,.035),ylabel = "Observations",subplots=True,layout=(2,2),title = "Distribution of daily returns within $\pm 3.5\%$.")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: array([[<Axes: xlabel='Return', ylabel='Observations'>,
+:         <Axes: xlabel='Return', ylabel='Observations'>],
+:        [<Axes: xlabel='Return', ylabel='Observations'>,
+:         <Axes: xlabel='Return', ylabel='Observations'>]], dtype=object)
+[[file:./.ob-jupyter/6444c35ee2368d7de4f5ba1149fadfeae2e10655.png]]
+:END:
+
+The US small cap value asset has fatter tails than
+* Bond Returns Time Series
+
+#+begin_src jupyter-python :session MiniProject1
 %matplotlib inline
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -101,6 +249,156 @@ import numpy as np
 #+end_src
 
 #+RESULTS:
+
+#+begin_src jupyter-python :session MiniProject1
+bond_value = pd.read_csv("./Return(1).csv")
+bond_value.index = pd.to_datetime(bond_value["Date"])
+bond_value.drop("Date",axis=1)
+bond_value.head()
+#+end_src
+
+#+RESULTS:
+#+begin_export html
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Date</th>
+      <th>ZROZSIM</th>
+    </tr>
+    <tr>
+      <th>Date</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1962-01-02</th>
+      <td>1962-01-02</td>
+      <td>10000.00</td>
+    </tr>
+    <tr>
+      <th>1962-01-03</th>
+      <td>1962-01-03</td>
+      <td>10001.56</td>
+    </tr>
+    <tr>
+      <th>1962-01-04</th>
+      <td>1962-01-04</td>
+      <td>10030.05</td>
+    </tr>
+    <tr>
+      <th>1962-01-05</th>
+      <td>1962-01-05</td>
+      <td>10004.66</td>
+    </tr>
+    <tr>
+      <th>1962-01-08</th>
+      <td>1962-01-08</td>
+      <td>9979.34</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+#+end_export
+#+ipynb-newcell
+#+begin_src jupyter-python :session MiniProject1
+returns = (bond_value["ZROZSIM"].shift(1) - bond_value["ZROZSIM"] ) / bond_value["ZROZSIM"]
+returns.name = 'Return'
+returns = pd.concat([bond_value, returns],axis=1)
+returns.index = pd.to_datetime(returns["Date"])
+returns.drop("Date",axis=1)
+returns.rename(columns={"ZROZSIM": "Hypothetical Value"},inplace=True)
+returns.describe()
+#+end_src
+
+#+RESULTS:
+#+begin_export html
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Hypothetical Value</th>
+      <th>Return</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>15956.000000</td>
+      <td>15955.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>158867.525691</td>
+      <td>-0.000101</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>203069.619789</td>
+      <td>0.015428</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>2170.820000</td>
+      <td>-0.176333</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>9505.440000</td>
+      <td>-0.007931</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>48974.245000</td>
+      <td>-0.000229</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>247422.165000</td>
+      <td>0.007054</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>883767.220000</td>
+      <td>0.214581</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+#+end_export
+
+#+ipynb-newcell
+We now have a time series giving the daily returns of a portfolio of treasuries simulating the holdings of =ZROZ=, which will represent our bond portion of each portfolio.
 
 
 

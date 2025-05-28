@@ -7,7 +7,11 @@ readme = "README.org"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-
+yfinance = "*"
+matplotlib = "*"
+numpy = "*"
+scipy = "*"
+pandas = "*"
 
 [build-system]
 requires = ["poetry-core"]

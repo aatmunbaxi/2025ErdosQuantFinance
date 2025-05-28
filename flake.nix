@@ -3,6 +3,7 @@
 
   inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
 
+
   outputs = inputs:
     let
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -14,10 +15,7 @@
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
           venvDir = ".venv";
-          packages = with pkgs; [ gnumake  python311 ] ++ (with python311Packages; [
-            # ipykernel
-            # jupyter-client
-            # jupyter-console
+          packages = with pkgs; [ poetry gnumake  python311 ] ++ (with python311Packages; [
             jupyter
             jupytext
             pandas
