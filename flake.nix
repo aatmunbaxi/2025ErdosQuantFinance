@@ -26,6 +26,7 @@
             numpy
             scipy
             scikitlearn
+            pandoc
           ]);
         };
       });

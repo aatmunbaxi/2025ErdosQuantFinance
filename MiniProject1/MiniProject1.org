@@ -31,7 +31,7 @@ Our "low risk" portfolio will consist of 90% global stocks at *current* market c
 |-------------------+----|
 | Total US Stock    | 57 |
 | Total ex-US Stock | 33 |
-| 25+ STRIPS        | 10 |
+| Total US Treasury | 10 |
 
 The choice of using current market cap weights for the US and ex-US geographies is to make the portfolio comparable to the high risk portfolio.
 
@@ -78,10 +78,10 @@ The choice of \(50\% \) dedicated to small cap value in each geography is somewh
 Our high risk portfolio is then
 | Asset                 |  % |
 |-----------------------+----|
-| Total US Stock        | 28 |
-| US Small Cap Value    | 29 |
-| Total ex-US Stock     | 29 |
-| ex-US Small Cap Value | 16 |
+| Total US Stock        | 25 |
+| US Small Cap Value    | 25 |
+| Total ex-US Stock     | 15 |
+| ex-US Small Cap Value | 15 |
 | 25+ STRIPS            | 10 |
 #+ipynb-newcell
 * Risk of Small Cap Value
@@ -96,6 +96,11 @@ The data we load gives the hypothetical growth of 4 portfolios, each invested 10
 
 #+begin_src jupyter-python :session MiniProject1
 import datetime as dt
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+
 us_exus = pd.read_csv("./us-exus.csv")
 # us_exus.index = pd.to_datetime(us_exus["Date"])
 us_exus.set_index(pd.to_datetime(us_exus["Date"]),inplace=True)
@@ -108,6 +113,7 @@ us_exus.plot(rot=70)
 : <Axes: xlabel='Date'>
 [[file:./.ob-jupyter/834561ca30bf12f12c03791a8a0eeca063f89556.png]]
 :END:
+
 #+ipynb-newcell
 #+begin_src jupyter-python :session MiniProject1
 day_returns = (us_exus.shift(1) -us_exus) / us_exus
@@ -201,14 +207,19 @@ day_returns.describe()
 </table>
 </div>
 #+end_export
+
 #+ipynb-newcell
+The "SIM" suffix indicates that the time series is simulating returns of the ticker in the prefix.
+e.g. "VTISIM" represents the total return of the total US equity market, as VTI has only been around since 2001.
+
+
 With the data of daily returns in hand, we can compare volatilities over the period from June 1996 to today.
 #+ipynb-newcell
 #+begin_src jupyter-python :session MiniProject1
 import numpy as np
 log_returns = np.log(day_returns+1).dropna()
 # log_returns.describe()
-np.sqrt(252)*log_returns.describe().loc["std"]
+(np.sqrt(252)*log_returns).describe().loc["std"]
 #+end_src
 
 #+RESULTS:
@@ -224,107 +235,114 @@ In this sense, adding these assets to the low risk portfolio increases the volat
 We can also visually inspect a histogram of daily returns and see how they are distributed.
 #+ipynb-newcell
 #+begin_src jupyter-python :session MiniProject1
-day_returns.plot(kind="hist",bins=70,xlabel = "Return",
-                 xlim=(-.035,.035),ylabel = "Observations",subplots=True,layout=(2,2),title = "Distribution of daily returns within $\pm 3.5\%$.")
+(100*day_returns).plot(kind="hist",bins=120,xlabel = "Daily Return (%)",
+                 xlim=(-3.5,3.5),
+                 ylabel = "Observations",
+                 subplots=True,layout=(2,2),
+                 title = "Distributions of Daily Returns")
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: array([[<Axes: xlabel='Return', ylabel='Observations'>,
-:         <Axes: xlabel='Return', ylabel='Observations'>],
-:        [<Axes: xlabel='Return', ylabel='Observations'>,
-:         <Axes: xlabel='Return', ylabel='Observations'>]], dtype=object)
-[[file:./.ob-jupyter/6444c35ee2368d7de4f5ba1149fadfeae2e10655.png]]
+: array([[<Axes: xlabel='Daily Return (%)', ylabel='Observations'>,
+:         <Axes: xlabel='Daily Return (%)', ylabel='Observations'>],
+:        [<Axes: xlabel='Daily Return (%)', ylabel='Observations'>,
+:         <Axes: xlabel='Daily Return (%)', ylabel='Observations'>]],
+:       dtype=object)
+[[file:./.ob-jupyter/b42e7d8ef7ecbdddf40c0998e20d933cc32d036a.png]]
 :END:
 
-The US small cap value asset has fatter tails than
+The US small cap value asset has fatter tails than the total market counterpart in the same geography, as demonstrated by the higher volatility earlier.
+The additional concentration of the higher risk portfolio in these assets would make it more risky.
 * Bond Returns Time Series
-
-#+begin_src jupyter-python :session MiniProject1
-%matplotlib inline
-import matplotlib.pyplot as plt
-import pandas as pd
-import yfinance as yf
-import numpy as np
-#+end_src
-
-#+RESULTS:
-
-#+begin_src jupyter-python :session MiniProject1
-bond_value = pd.read_csv("./Return(1).csv")
-bond_value.index = pd.to_datetime(bond_value["Date"])
-bond_value.drop("Date",axis=1)
-bond_value.head()
-#+end_src
-
-#+RESULTS:
-#+begin_export html
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Date</th>
-      <th>ZROZSIM</th>
-    </tr>
-    <tr>
-      <th>Date</th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>1962-01-02</th>
-      <td>1962-01-02</td>
-      <td>10000.00</td>
-    </tr>
-    <tr>
-      <th>1962-01-03</th>
-      <td>1962-01-03</td>
-      <td>10001.56</td>
-    </tr>
-    <tr>
-      <th>1962-01-04</th>
-      <td>1962-01-04</td>
-      <td>10030.05</td>
-    </tr>
-    <tr>
-      <th>1962-01-05</th>
-      <td>1962-01-05</td>
-      <td>10004.66</td>
-    </tr>
-    <tr>
-      <th>1962-01-08</th>
-      <td>1962-01-08</td>
-      <td>9979.34</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-#+end_export
 #+ipynb-newcell
 #+begin_src jupyter-python :session MiniProject1
-returns = (bond_value["ZROZSIM"].shift(1) - bond_value["ZROZSIM"] ) / bond_value["ZROZSIM"]
-returns.name = 'Return'
-returns = pd.concat([bond_value, returns],axis=1)
-returns.index = pd.to_datetime(returns["Date"])
-returns.drop("Date",axis=1)
-returns.rename(columns={"ZROZSIM": "Hypothetical Value"},inplace=True)
-returns.describe()
+def csv_to_series(csv_path):
+    s = pd.read_csv(csv_path)
+    s["Date"] = pd.to_datetime(s["Date"])
+    s.set_index("Date",inplace = True)
+    returns = (s.shift(-1)-s) / s
+    returns.columns = [ticker + " Returns" for ticker in s.columns]
+    return pd.concat([s, returns],axis=1)
+#+end_src
+
+#+RESULTS:
+
+#+ipynb-newcell
+Let us demonstrate why the choice of zero coupon bonds in the higher risk portfolio is riskier via volatility.
+
+#+ipynb-newcell
+#+begin_src jupyter-python :session MiniProject1
+govt = csv_to_series("./GOVT-returns.csv")
+zroz = csv_to_series("./ZROZ-returns.csv")
+zroz
+(np.log(pd.concat([1+ govt.drop("GOVT",axis=1),
+                  1+zroz.drop("ZROZ",axis=1)]))*np.sqrt(252)).describe().loc["std"]
+#+end_src
+
+#+RESULTS:
+: GOVT Returns    0.061450
+: ZROZ Returns    0.244891
+: Name: std, dtype: float64
+
+#+ipynb-newcell
+
+One sees that the daily returns of zero coupon bonds is significantly more volatile than treasuries with lower duration, with data going back to July 1969.
+However, this volatility is not taken arbitrarily.
+The stripping of interest payments from zero coupon bonds increases their expected returns over interest paying ones.
+Since we are interested in long term investing for both of our portfolios, we compare the calendar year returns
+#+ipynb-newcell
+#+begin_src jupyter-python :session MiniProject1
+yearly_zroz = (1+zroz["ZROZ Returns"]).groupby(pd.Grouper(freq = "YE")).agg("prod")
+yearly_govt = (1+govt["GOVT Returns"]).groupby(pd.Grouper(freq = "YE")).agg("prod")
+pd.concat([yearly_zroz,
+           yearly_govt],axis=1).plot(
+               y = ["ZROZ Returns", "GOVT Returns"],
+               title="Calendar year returns",
+               ylabel= "Return (%)",
+               xlabel = "Year")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'Calendar year returns'}, xlabel='Year', ylabel='Return (%)'>
+[[file:./.ob-jupyter/e0b83b32426d88fcbf8bcbfa35f012e035738574.png]]
+:END:
+
+#+ipynb-newcell
+Visually, the volatility difference is very stark.
+Historically, the zero coupon bonds have acted as "bonds++", increasing the magnitude of returns on intermediate-duration treasuries.
+The returns appear to agree in their direction, but differ strongly in magnitude, which is consistent with the interpretation of ultra-long duration bonds as a leveraged bond allocation.
+
+#+ipynb-newcell
+* A Backtest
+We can backtest our two portfolios to get an idea of how they would have performed  against each other, had our hypothetical investor invested in them for the tested period.
+
+#+ipynb-newcell
+#+begin_src jupyter-python :session MiniProject1 :exports none
+inception = "1994-12-29"
+
+disvx = csv_to_series("./DISVX-returns.csv")[inception:]["DISVX Returns"]
+dfsvx = csv_to_series("./DFSVX-returns.csv")[inception:]["DFSVX Returns"]
+vti = csv_to_series("./VTI-returns.csv")[inception:]["VTI Returns"]
+vxus = csv_to_series("./VXUS-returns.csv")[inception:]["VXUS Returns"]
+govt = csv_to_series("./GOVT-returns.csv")[inception:]["GOVT Returns"]
+zroz = csv_to_series("./ZROZ-returns.csv")[inception:]["ZROZ Returns"]
+#+end_src
+
+
+#+ipynb-newcell
+#+begin_src jupyter-python :session MiniProject1
+p1 = 0.57*vti + .33 * vxus + 0.1*govt
+p2 = 0.25*vti + 0.25*dfsvx + 0.15*vxus + 0.15*disvx + 0.10*zroz
+#+end_src
+
+
+
+#+ipynb-newcell
+#+begin_src jupyter-python :session MiniProject1
+both = pd.concat([p1,p2],axis = 1).set_axis(["Portfolio 1 Returns", "Portfolio 2 Returns"],axis=1)
+both.describe()
 #+end_src
 
 #+RESULTS:
@@ -347,50 +365,50 @@ returns.describe()
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>Hypothetical Value</th>
-      <th>Return</th>
+      <th>Portfolio 1 Returns</th>
+      <th>Portfolio 2 Returns</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>count</th>
-      <td>15956.000000</td>
-      <td>15955.000000</td>
+      <td>7654.000000</td>
+      <td>7651.000000</td>
     </tr>
     <tr>
       <th>mean</th>
-      <td>158867.525691</td>
-      <td>-0.000101</td>
+      <td>0.000383</td>
+      <td>0.000377</td>
     </tr>
     <tr>
       <th>std</th>
-      <td>203069.619789</td>
-      <td>0.015428</td>
+      <td>0.010055</td>
+      <td>0.008664</td>
     </tr>
     <tr>
       <th>min</th>
-      <td>2170.820000</td>
-      <td>-0.176333</td>
+      <td>-0.102403</td>
+      <td>-0.085264</td>
     </tr>
     <tr>
       <th>25%</th>
-      <td>9505.440000</td>
-      <td>-0.007931</td>
+      <td>-0.003911</td>
+      <td>-0.003556</td>
     </tr>
     <tr>
       <th>50%</th>
-      <td>48974.245000</td>
-      <td>-0.000229</td>
+      <td>0.000659</td>
+      <td>0.000688</td>
     </tr>
     <tr>
       <th>75%</th>
-      <td>247422.165000</td>
-      <td>0.007054</td>
+      <td>0.005099</td>
+      <td>0.004646</td>
     </tr>
     <tr>
       <th>max</th>
-      <td>883767.220000</td>
-      <td>0.214581</td>
+      <td>0.105040</td>
+      <td>0.080504</td>
     </tr>
   </tbody>
 </table>
@@ -398,10 +416,41 @@ returns.describe()
 #+end_export
 
 #+ipynb-newcell
-We now have a time series giving the daily returns of a portfolio of treasuries simulating the holdings of =ZROZ=, which will represent our bond portion of each portfolio.
+As we predicted, the standard deviation of daily returns the second portfolio is higher, indicating higher volatilily.
 
+#+ipynb-newcell
+#+begin_src jupyter-python :session MiniProject1
+(((1+both).groupby(pd.Grouper(freq="ME")).agg("prod")-1)*100).plot(kind="hist",
+                                                             bins = 50,
+                                                     subplots=True,
+                                                     title = "Distribution of Monthly Returns (%)",
+                                                     xlabel = "Montly Return (%)")
+#+end_src
 
+#+RESULTS:
+:RESULTS:
+: array([<Axes: xlabel='Montly Return (%)', ylabel='Frequency'>,
+:        <Axes: xlabel='Montly Return (%)', ylabel='Frequency'>],
+:       dtype=object)
+[[file:./.ob-jupyter/67e26b8d8f4238ec76e28e40e96a59fbdb3ce164.png]]
+:END:
+
+#+ipynb-newcell
+Finally, we backtest both portfolios with a starting value of of $1000 invested on 1994-12-28.
+#+ipynb-newcell
+#+begin_src jupyter-python :session MiniProject1
+((1+both).cumprod()*1000).plot(title = "Growth of $1000")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'Growth of $1000'}, xlabel='Date'>
+[[file:./.ob-jupyter/d910701dab8d20accaab016f93930dee6ab80909.png]]
+:END:
+#+ipynb-newcell
+The higher risk portfolio ended up with higher total returns for this period.
+Obviously, past performance is not an indicator of future results.
 
 # Local Variables:
-# eval: (setq! jupyter-executable (executable-find "jupyter"))
+# jupyter-executable: "../.venv/bin/jupyter"
 # End:
