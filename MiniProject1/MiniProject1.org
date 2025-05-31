@@ -58,7 +58,6 @@ The risk factors in this model are
 1. Market beta (exposure to diversified stock)
 2. Size
 3. Value
-
 It should be noted that the model improves on the CAPM /empirically/ in how it explains returns, but past returns do not predict the future.
 However, there are good reasons to believe thse addition risk factors should be compensated ones.
 
@@ -330,12 +329,16 @@ govt = csv_to_series("./GOVT-returns.csv")[inception:]["GOVT Returns"]
 zroz = csv_to_series("./ZROZ-returns.csv")[inception:]["ZROZ Returns"]
 #+end_src
 
+#+RESULTS:
+
 
 #+ipynb-newcell
 #+begin_src jupyter-python :session MiniProject1
 p1 = 0.57*vti + .33 * vxus + 0.1*govt
 p2 = 0.25*vti + 0.25*dfsvx + 0.15*vxus + 0.15*disvx + 0.10*zroz
 #+end_src
+
+#+RESULTS:
 
 
 
