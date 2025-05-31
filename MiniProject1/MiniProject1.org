@@ -251,9 +251,9 @@ We can also visually inspect a histogram of daily returns and see how they are d
 :END:
 
 The US small cap value asset has fatter tails than the total market counterpart in the same geography, as demonstrated by the higher volatility earlier.
-The additional concentration of the higher risk portfolio in these assets would make it more risky.
-* Bond Returns Time Series
-
+However, both geographies see a higher mean in the small cap value class.
+This is good, as it indicates that the small cap value risk has historically been compensated.
+* Comparison of Bond Choices
 #+begin_src jupyter-python :session MiniProject1 :exports code
 def csv_to_series(csv_path):
     s = pd.read_csv(csv_path)
@@ -301,7 +301,6 @@ pd.concat([yearly_zroz,
 
 #+RESULTS:
 :RESULTS:
-: <Axes: title={'center': 'Calendar year returns'}, xlabel='Year', ylabel='Return (%)'>
 [[file:./.ob-jupyter/e0b83b32426d88fcbf8bcbfa35f012e035738574.png]]
 :END:
 
@@ -327,18 +326,11 @@ zroz = csv_to_series("./ZROZ-returns.csv")[inception:]["ZROZ Returns"]
 #+end_src
 
 #+RESULTS:
-
-
-
+We now create a return series for each of our defined portfolios
 #+begin_src jupyter-python :session MiniProject1 :exports code
 p1 = 0.57*vti + .33 * vxus + 0.1*govt
 p2 = 0.25*vti + 0.25*dfsvx + 0.15*vxus + 0.15*disvx + 0.10*zroz
 #+end_src
-
-#+RESULTS:
-
-
-
 
 #+begin_src jupyter-python :session MiniProject1 :exports both
 both = pd.concat([p1,p2],axis = 1).set_axis(["Portfolio 1 Returns", "Portfolio 2 Returns"],axis=1)
@@ -416,9 +408,7 @@ both.describe()
 #+end_export
 
 
-As we predicted, the standard deviation of daily returns the second portfolio is higher, indicating higher volatilily.
-
-
+We inspect the distribution of returns on each of the portfolios.
 #+begin_src jupyter-python :session MiniProject1 :exports both
 (((1+both).groupby(pd.Grouper(freq="ME")).agg("prod")-1)*100).plot(kind="hist",
                                                              bins = 50,
@@ -449,7 +439,7 @@ Finally, we backtest both portfolios with a starting value of of $1000 invested 
 :END:
 
 The higher risk portfolio ended up with higher total returns for this period.
-Obviously, past performance is not an indicator of future results.
+Obviously, past performance is not an indicator of future results, but the additional risk we took appears to have been compensated.
 
 # Local Variables:
 # jupyter-executable: "../.venv/bin/jupyter"
