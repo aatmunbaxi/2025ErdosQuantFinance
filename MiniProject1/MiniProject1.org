@@ -94,7 +94,7 @@ We will compare the volatility of these funds against their respective geography
 In order to capture the *total* return of these assets, we choose to use data from [[https://testfol.io][testfolio]], a portfolio backtesting tool that captures total returns of a portfolio, not just price action like Yahoo Finance.
 The data we load gives the hypothetical growth of 4 portfolios, each invested 100% into one of the assets above.
 
-#+begin_src jupyter-python :session MiniProject1
+#+begin_src jupyter-python :session MiniProject1 :exports both
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -115,8 +115,8 @@ us_exus.plot(rot=70)
 :END:
 
 #+ipynb-newcell
-#+begin_src jupyter-python :session MiniProject1
-day_returns = (us_exus.shift(1) -us_exus) / us_exus
+#+begin_src jupyter-python :session MiniProject1 :exports both
+day_returns = (us_exus.shift(-1) -us_exus) / us_exus
 day_returns.describe()
 #+end_src
 
@@ -156,52 +156,52 @@ day_returns.describe()
     </tr>
     <tr>
       <th>mean</th>
-      <td>-0.000310</td>
-      <td>-0.000329</td>
-      <td>-0.000236</td>
-      <td>-0.000150</td>
+      <td>0.000512</td>
+      <td>0.000475</td>
+      <td>0.000340</td>
+      <td>0.000284</td>
     </tr>
     <tr>
       <th>std</th>
-      <td>0.014256</td>
-      <td>0.012106</td>
-      <td>0.010205</td>
-      <td>0.011621</td>
+      <td>0.014160</td>
+      <td>0.012051</td>
+      <td>0.010129</td>
+      <td>0.011562</td>
     </tr>
     <tr>
       <th>min</th>
-      <td>-0.095405</td>
-      <td>-0.102305</td>
-      <td>-0.082483</td>
-      <td>-0.108270</td>
+      <td>-0.130435</td>
+      <td>-0.122971</td>
+      <td>-0.099544</td>
+      <td>-0.103702</td>
     </tr>
     <tr>
       <th>25%</th>
-      <td>-0.007275</td>
-      <td>-0.006124</td>
-      <td>-0.005561</td>
-      <td>-0.005997</td>
+      <td>-0.006110</td>
+      <td>-0.004550</td>
+      <td>-0.004272</td>
+      <td>-0.004959</td>
     </tr>
     <tr>
       <th>50%</th>
-      <td>-0.001066</td>
-      <td>-0.000791</td>
-      <td>-0.000592</td>
-      <td>-0.000673</td>
+      <td>0.001067</td>
+      <td>0.000792</td>
+      <td>0.000592</td>
+      <td>0.000674</td>
     </tr>
     <tr>
       <th>75%</th>
-      <td>0.006148</td>
-      <td>0.004571</td>
-      <td>0.004290</td>
-      <td>0.004984</td>
+      <td>0.007328</td>
+      <td>0.006162</td>
+      <td>0.005592</td>
+      <td>0.006033</td>
     </tr>
     <tr>
       <th>max</th>
-      <td>0.150000</td>
-      <td>0.140214</td>
-      <td>0.110549</td>
-      <td>0.115700</td>
+      <td>0.105467</td>
+      <td>0.113965</td>
+      <td>0.089898</td>
+      <td>0.121416</td>
     </tr>
   </tbody>
 </table>
@@ -249,7 +249,7 @@ We can also visually inspect a histogram of daily returns and see how they are d
 :        [<Axes: xlabel='Daily Return (%)', ylabel='Observations'>,
 :         <Axes: xlabel='Daily Return (%)', ylabel='Observations'>]],
 :       dtype=object)
-[[file:./.ob-jupyter/b42e7d8ef7ecbdddf40c0998e20d933cc32d036a.png]]
+[[file:./.ob-jupyter/73a9513cb792f44405009df0795ee2d34d216363.png]]
 :END:
 
 The US small cap value asset has fatter tails than the total market counterpart in the same geography, as demonstrated by the higher volatility earlier.
@@ -272,7 +272,7 @@ def csv_to_series(csv_path):
 Let us demonstrate why the choice of zero coupon bonds in the higher risk portfolio is riskier via volatility.
 
 #+ipynb-newcell
-#+begin_src jupyter-python :session MiniProject1
+#+begin_src jupyter-python :session MiniProject1 :exports both
 govt = csv_to_series("./GOVT-returns.csv")
 zroz = csv_to_series("./ZROZ-returns.csv")
 zroz
@@ -292,7 +292,7 @@ However, this volatility is not taken arbitrarily.
 The stripping of interest payments from zero coupon bonds increases their expected returns over interest paying ones.
 Since we are interested in long term investing for both of our portfolios, we compare the calendar year returns
 #+ipynb-newcell
-#+begin_src jupyter-python :session MiniProject1
+#+begin_src jupyter-python :session MiniProject1 :exports both
 yearly_zroz = (1+zroz["ZROZ Returns"]).groupby(pd.Grouper(freq = "YE")).agg("prod")
 yearly_govt = (1+govt["GOVT Returns"]).groupby(pd.Grouper(freq = "YE")).agg("prod")
 pd.concat([yearly_zroz,
@@ -319,7 +319,7 @@ The returns appear to agree in their direction, but differ strongly in magnitude
 We can backtest our two portfolios to get an idea of how they would have performed  against each other, had our hypothetical investor invested in them for the tested period.
 
 #+ipynb-newcell
-#+begin_src jupyter-python :session MiniProject1 :exports none
+#+begin_src jupyter-python :session MiniProject1 :exports code
 inception = "1994-12-29"
 
 disvx = csv_to_series("./DISVX-returns.csv")[inception:]["DISVX Returns"]
@@ -334,7 +334,7 @@ zroz = csv_to_series("./ZROZ-returns.csv")[inception:]["ZROZ Returns"]
 
 
 #+ipynb-newcell
-#+begin_src jupyter-python :session MiniProject1
+#+begin_src jupyter-python :session MiniProject1 :exports code
 p1 = 0.57*vti + .33 * vxus + 0.1*govt
 p2 = 0.25*vti + 0.25*dfsvx + 0.15*vxus + 0.15*disvx + 0.10*zroz
 #+end_src
@@ -343,7 +343,7 @@ p2 = 0.25*vti + 0.25*dfsvx + 0.15*vxus + 0.15*disvx + 0.10*zroz
 
 
 
-#+ipynb-newcell
+#+ipynb-newcell :exports both
 #+begin_src jupyter-python :session MiniProject1
 both = pd.concat([p1,p2],axis = 1).set_axis(["Portfolio 1 Returns", "Portfolio 2 Returns"],axis=1)
 both.describe()
