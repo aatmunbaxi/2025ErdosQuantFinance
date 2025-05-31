@@ -1,6 +1,6 @@
 #+title: Quant Finance Mini Project 1
 #+author: Aatmun Baxi
-#+ipynb-newcell
+
 #+options: toc:nil
 #+property: header-args:jupyter-python :exports both :results ouput
 * Project Statement
@@ -8,7 +8,7 @@
 
 *You are to explain your interpretation of a high risk profile and low risk profile of a portfolio. You should provide some measurable quantitative data in you explanation.*
 
-#+ipynb-newcell
+
 * Portfolio Choice and Motivation
 It is well documented that investors that invest for consumption goals in the long term (i.e. to fund consumption >10 years from the beginning of investment) can maximize expected return and minimize risk—as defined by volatility and probability of (un)realized capital loss—by holding broadly diversified, low cost index funds of risky assests with expected returns in excess of 3 month US treasury bills.
 Furthermore, it is financial dogma to hold differing proportions of the more "risky" stocks and "safer" bonds according to how close the investor is to their date of their consumption beginning.
@@ -36,7 +36,7 @@ Our "low risk" portfolio will consist of 90% global stocks at *current* market c
 
 The choice of using current market cap weights for the US and ex-US geographies is to make the portfolio comparable to the high risk portfolio.
 
-#+ipynb-newcell
+
 * Risk Factors as Sources of Increased Risk
 In Capital Asset Pricing Model (CAPM), the "low" risk portfolio would be nearly the riskiest portfolio one can come up with, when only compensated risks are accounted for.
 A compensated risk is a source of risk that an investor can expect to be compensated for, while an investor taking on uncompensated risk cannot expect to increase their returns for doing so.
@@ -62,7 +62,7 @@ The risk factors in this model are
 It should be noted that the model improves on the CAPM /empirically/ in how it explains returns, but past returns do not predict the future.
 However, there are good reasons to believe thse addition risk factors should be compensated ones.
 
-#+ipynb-newcell
+
 * The High Risk Portfolio
 The three factor model predicts that a portfolio with higher exposure to small cap companies and value companies can give returns higher than the market portfolio.
 This is the basis for our high risk portfolio.
@@ -83,7 +83,7 @@ Our high risk portfolio is then
 | Total ex-US Stock     | 15 |
 | ex-US Small Cap Value | 15 |
 | 25+ STRIPS            | 10 |
-#+ipynb-newcell
+
 * Risk of Small Cap Value
 Though we have used the three factor model to incorporate new sources of risk into our high risk portfolio, it turns out that we have incorporated assets that have higher risk even in traditional metrics of risk such as volatitily.
 Let us demonstrate this empirically.
@@ -114,7 +114,7 @@ us_exus.plot(rot=70)
 [[file:./.ob-jupyter/834561ca30bf12f12c03791a8a0eeca063f89556.png]]
 :END:
 
-#+ipynb-newcell
+
 #+begin_src jupyter-python :session MiniProject1 :exports both
 day_returns = (us_exus.shift(-1) -us_exus) / us_exus
 day_returns.describe()
@@ -208,14 +208,13 @@ day_returns.describe()
 </div>
 #+end_export
 
-#+ipynb-newcell
+
 The "SIM" suffix indicates that the time series is simulating returns of the ticker in the prefix.
 e.g. "VTISIM" represents the total return of the total US equity market, as VTI has only been around since 2001.
 
 
 With the data of daily returns in hand, we can compare volatilities over the period from June 1996 to today.
-#+ipynb-newcell
-#+begin_src jupyter-python :session MiniProject1
+#+begin_src jupyter-python :session MiniProject1 :exports both
 import numpy as np
 log_returns = np.log(day_returns+1).dropna()
 # log_returns.describe()
@@ -229,12 +228,11 @@ log_returns = np.log(day_returns+1).dropna()
 : VXUSSIM    0.183918
 : Name: std, dtype: float64
 
-#+ipynb-newcell
 One can see that the volatility of returns of US small cap value is higher than the total stock market index, while it is slightly lower in the ex-US geography.
 In this sense, adding these assets to the low risk portfolio increases the volatility, making it higher risk in traditional metrics.
 We can also visually inspect a histogram of daily returns and see how they are distributed.
-#+ipynb-newcell
-#+begin_src jupyter-python :session MiniProject1
+
+#+begin_src jupyter-python :session MiniProject1 :exports both
 (100*day_returns).plot(kind="hist",bins=120,xlabel = "Daily Return (%)",
                  xlim=(-3.5,3.5),
                  ylabel = "Observations",
@@ -255,8 +253,8 @@ We can also visually inspect a histogram of daily returns and see how they are d
 The US small cap value asset has fatter tails than the total market counterpart in the same geography, as demonstrated by the higher volatility earlier.
 The additional concentration of the higher risk portfolio in these assets would make it more risky.
 * Bond Returns Time Series
-#+ipynb-newcell
-#+begin_src jupyter-python :session MiniProject1
+
+#+begin_src jupyter-python :session MiniProject1 :exports code
 def csv_to_series(csv_path):
     s = pd.read_csv(csv_path)
     s["Date"] = pd.to_datetime(s["Date"])
@@ -267,11 +265,9 @@ def csv_to_series(csv_path):
 #+end_src
 
 #+RESULTS:
-
-#+ipynb-newcell
 Let us demonstrate why the choice of zero coupon bonds in the higher risk portfolio is riskier via volatility.
 
-#+ipynb-newcell
+
 #+begin_src jupyter-python :session MiniProject1 :exports both
 govt = csv_to_series("./GOVT-returns.csv")
 zroz = csv_to_series("./ZROZ-returns.csv")
@@ -285,13 +281,13 @@ zroz
 : ZROZ Returns    0.244891
 : Name: std, dtype: float64
 
-#+ipynb-newcell
+
 
 One sees that the daily returns of zero coupon bonds is significantly more volatile than treasuries with lower duration, with data going back to July 1969.
 However, this volatility is not taken arbitrarily.
 The stripping of interest payments from zero coupon bonds increases their expected returns over interest paying ones.
 Since we are interested in long term investing for both of our portfolios, we compare the calendar year returns
-#+ipynb-newcell
+
 #+begin_src jupyter-python :session MiniProject1 :exports both
 yearly_zroz = (1+zroz["ZROZ Returns"]).groupby(pd.Grouper(freq = "YE")).agg("prod")
 yearly_govt = (1+govt["GOVT Returns"]).groupby(pd.Grouper(freq = "YE")).agg("prod")
@@ -309,16 +305,16 @@ pd.concat([yearly_zroz,
 [[file:./.ob-jupyter/e0b83b32426d88fcbf8bcbfa35f012e035738574.png]]
 :END:
 
-#+ipynb-newcell
+
 Visually, the volatility difference is very stark.
 Historically, the zero coupon bonds have acted as "bonds++", increasing the magnitude of returns on intermediate-duration treasuries.
 The returns appear to agree in their direction, but differ strongly in magnitude, which is consistent with the interpretation of ultra-long duration bonds as a leveraged bond allocation.
 
-#+ipynb-newcell
+
 * A Backtest
 We can backtest our two portfolios to get an idea of how they would have performed  against each other, had our hypothetical investor invested in them for the tested period.
 
-#+ipynb-newcell
+
 #+begin_src jupyter-python :session MiniProject1 :exports code
 inception = "1994-12-29"
 
@@ -333,7 +329,7 @@ zroz = csv_to_series("./ZROZ-returns.csv")[inception:]["ZROZ Returns"]
 #+RESULTS:
 
 
-#+ipynb-newcell
+
 #+begin_src jupyter-python :session MiniProject1 :exports code
 p1 = 0.57*vti + .33 * vxus + 0.1*govt
 p2 = 0.25*vti + 0.25*dfsvx + 0.15*vxus + 0.15*disvx + 0.10*zroz
@@ -343,8 +339,8 @@ p2 = 0.25*vti + 0.25*dfsvx + 0.15*vxus + 0.15*disvx + 0.10*zroz
 
 
 
-#+ipynb-newcell :exports both
-#+begin_src jupyter-python :session MiniProject1
+
+#+begin_src jupyter-python :session MiniProject1 :exports both
 both = pd.concat([p1,p2],axis = 1).set_axis(["Portfolio 1 Returns", "Portfolio 2 Returns"],axis=1)
 both.describe()
 #+end_src
@@ -419,11 +415,11 @@ both.describe()
 </div>
 #+end_export
 
-#+ipynb-newcell
+
 As we predicted, the standard deviation of daily returns the second portfolio is higher, indicating higher volatilily.
 
-#+ipynb-newcell
-#+begin_src jupyter-python :session MiniProject1
+
+#+begin_src jupyter-python :session MiniProject1 :exports both
 (((1+both).groupby(pd.Grouper(freq="ME")).agg("prod")-1)*100).plot(kind="hist",
                                                              bins = 50,
                                                      subplots=True,
@@ -439,10 +435,10 @@ As we predicted, the standard deviation of daily returns the second portfolio is
 [[file:./.ob-jupyter/67e26b8d8f4238ec76e28e40e96a59fbdb3ce164.png]]
 :END:
 
-#+ipynb-newcell
+
 Finally, we backtest both portfolios with a starting value of of $1000 invested on 1994-12-28.
-#+ipynb-newcell
-#+begin_src jupyter-python :session MiniProject1
+
+#+begin_src jupyter-python :session MiniProject1 :exports both
 ((1+both).cumprod()*1000).plot(title = "Growth of $1000")
 #+end_src
 
@@ -451,10 +447,11 @@ Finally, we backtest both portfolios with a starting value of of $1000 invested 
 : <Axes: title={'center': 'Growth of $1000'}, xlabel='Date'>
 [[file:./.ob-jupyter/d910701dab8d20accaab016f93930dee6ab80909.png]]
 :END:
-#+ipynb-newcell
+
 The higher risk portfolio ended up with higher total returns for this period.
 Obviously, past performance is not an indicator of future results.
 
 # Local Variables:
 # jupyter-executable: "../.venv/bin/jupyter"
+# compile-command: "pandoc -s -o MiniProject1.ipynb MiniProject1.org -V header-includes='<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>'"
 # End:
