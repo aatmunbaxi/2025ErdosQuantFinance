@@ -1,7 +1,7 @@
 #+title: Quant Finance Mini Project 1
 #+author: Aatmun Baxi
 #+ipynb-newcell
-
+#+property: header-args:jupyter-python :exports both
 * Project Statement
 *Use current stock data to create two potentially profitable investment portfolios. One that is higher risk and one that is lower risk.*
 
