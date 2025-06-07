@@ -30,8 +30,8 @@ Our "low risk" portfolio will consist of 90% global stocks at *current* market c
 
 | Asset             |  % |
 |-------------------+----|
-| Total US Stock    | 57 |
-| Total ex-US Stock | 33 |
+| Total US Stock    | 55 |
+| Total ex-US Stock | 35 |
 | Total US Treasury | 10 |
 
 The choice of using current market cap weights for the US and ex-US geographies is to make the portfolio comparable to the high risk portfolio.
@@ -78,10 +78,10 @@ The choice of \(50\% \) dedicated to small cap value in each geography is somewh
 Our high risk portfolio is then
 | Asset                 |  % |
 |-----------------------+----|
-| Total US Stock        | 25 |
-| US Small Cap Value    | 25 |
-| Total ex-US Stock     | 15 |
-| ex-US Small Cap Value | 15 |
+| Total US Stock        | 28 |
+| US Small Cap Value    | 27 |
+| Total ex-US Stock     | 18 |
+| ex-US Small Cap Value | 17 |
 | 25+ STRIPS            | 10 |
 
 * Risk of Small Cap Value
@@ -289,10 +289,10 @@ The stripping of interest payments from zero coupon bonds increases their expect
 Since we are interested in long term investing for both of our portfolios, we compare the calendar year returns
 
 #+begin_src jupyter-python :session MiniProject1 :exports both
-yearly_zroz = (1+zroz["ZROZ Returns"]).groupby(pd.Grouper(freq = "YE")).agg("prod")
-yearly_govt = (1+govt["GOVT Returns"]).groupby(pd.Grouper(freq = "YE")).agg("prod")
-pd.concat([yearly_zroz,
-           yearly_govt],axis=1).plot(
+yearly_zroz = ((1+zroz["ZROZ Returns"]).groupby(pd.Grouper(freq = "YE")).agg("prod")-1)
+yearly_govt = ((1+govt["GOVT Returns"]).groupby(pd.Grouper(freq = "YE")).agg("prod")-1)
+pd.concat([100*yearly_zroz,
+           100*yearly_govt],axis=1).plot(
                y = ["ZROZ Returns", "GOVT Returns"],
                title="Calendar year returns",
                ylabel= "Return (%)",
@@ -301,13 +301,15 @@ pd.concat([yearly_zroz,
 
 #+RESULTS:
 :RESULTS:
-[[file:./.ob-jupyter/e0b83b32426d88fcbf8bcbfa35f012e035738574.png]]
+: <Axes: title={'center': 'Calendar year returns'}, xlabel='Year', ylabel='Return (%)'>
+[[file:./.ob-jupyter/91667761bbcc5567f89e27b09a75d5aff804c801.png]]
 :END:
 
 
 Visually, the volatility difference is very stark.
 Historically, the zero coupon bonds have acted as "bonds++", increasing the magnitude of returns on intermediate-duration treasuries.
 The returns appear to agree in their direction, but differ strongly in magnitude, which is consistent with the interpretation of ultra-long duration bonds as a leveraged bond allocation.
+Those invested in bonds in the 80s likely have recurring ulcer issues.
 
 
 * A Backtest
@@ -328,9 +330,11 @@ zroz = csv_to_series("./ZROZ-returns.csv")[inception:]["ZROZ Returns"]
 #+RESULTS:
 We now create a return series for each of our defined portfolios
 #+begin_src jupyter-python :session MiniProject1 :exports code
-p1 = 0.57*vti + .33 * vxus + 0.1*govt
-p2 = 0.25*vti + 0.25*dfsvx + 0.15*vxus + 0.15*disvx + 0.10*zroz
+p1 = 0.55*vti + 0.35*vxus + 0.1*govt
+p2 = 0.28*vti + 0.27*dfsvx + 0.18*vxus + 0.17*disvx + 0.10*zroz
 #+end_src
+
+#+RESULTS:
 
 #+begin_src jupyter-python :session MiniProject1 :exports both
 both = pd.concat([p1,p2],axis = 1).set_axis(["Portfolio 1 Returns", "Portfolio 2 Returns"],axis=1)
@@ -369,38 +373,38 @@ both.describe()
     </tr>
     <tr>
       <th>mean</th>
-      <td>0.000383</td>
-      <td>0.000377</td>
+      <td>0.000379</td>
+      <td>0.000417</td>
     </tr>
     <tr>
       <th>std</th>
-      <td>0.010055</td>
-      <td>0.008664</td>
+      <td>0.010032</td>
+      <td>0.009731</td>
     </tr>
     <tr>
       <th>min</th>
-      <td>-0.102403</td>
-      <td>-0.085264</td>
+      <td>-0.101993</td>
+      <td>-0.096627</td>
     </tr>
     <tr>
       <th>25%</th>
-      <td>-0.003911</td>
-      <td>-0.003556</td>
+      <td>-0.003903</td>
+      <td>-0.003972</td>
     </tr>
     <tr>
       <th>50%</th>
-      <td>0.000659</td>
-      <td>0.000688</td>
+      <td>0.000676</td>
+      <td>0.000774</td>
     </tr>
     <tr>
       <th>75%</th>
-      <td>0.005099</td>
-      <td>0.004646</td>
+      <td>0.005091</td>
+      <td>0.005208</td>
     </tr>
     <tr>
       <th>max</th>
-      <td>0.105040</td>
-      <td>0.080504</td>
+      <td>0.105189</td>
+      <td>0.090987</td>
     </tr>
   </tbody>
 </table>
@@ -414,17 +418,26 @@ We inspect the distribution of returns on each of the portfolios.
                                                              bins = 50,
                                                      subplots=True,
                                                      title = "Distribution of Monthly Returns (%)",
-                                                     xlabel = "Montly Return (%)")
+                                                     xlabel = "Monthly Return (%)")
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: array([<Axes: xlabel='Montly Return (%)', ylabel='Frequency'>,
-:        <Axes: xlabel='Montly Return (%)', ylabel='Frequency'>],
+: array([<Axes: xlabel='Monthly Return (%)', ylabel='Frequency'>,
+:        <Axes: xlabel='Monthly Return (%)', ylabel='Frequency'>],
 :       dtype=object)
-[[file:./.ob-jupyter/67e26b8d8f4238ec76e28e40e96a59fbdb3ce164.png]]
+[[file:./.ob-jupyter/4a9ceec9ce75074a3f50fdea8e7f11adcbdc8f4f.png]]
 :END:
 
+Both distributions visually appear to exhibit negative skewness, in line with the high concentration of equities and the risk of sudden, rapid unrealized losses that they carry.
+#+begin_src jupyter-python :exports both :session MiniProject1
+both.skew(axis=0)
+#+end_src
+
+#+RESULTS:
+: Portfolio 1 Returns   -0.240736
+: Portfolio 2 Returns   -0.342016
+: dtype: float64
 
 Finally, we backtest both portfolios with a starting value of of $1000 invested on 1994-12-28.
 
@@ -435,7 +448,7 @@ Finally, we backtest both portfolios with a starting value of of $1000 invested 
 #+RESULTS:
 :RESULTS:
 : <Axes: title={'center': 'Growth of $1000'}, xlabel='Date'>
-[[file:./.ob-jupyter/d910701dab8d20accaab016f93930dee6ab80909.png]]
+[[file:./.ob-jupyter/5ca5ad24ba34fc28a6cd58feccbbbbe2f70f1bc7.png]]
 :END:
 
 The higher risk portfolio ended up with higher total returns for this period.

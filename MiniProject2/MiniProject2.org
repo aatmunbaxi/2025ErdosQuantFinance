@@ -1,0 +1,210 @@
+#+title: Mini Project 2
+#+author: Aatmun Baxi
+* Project Statement
+** Hypothesis Testing of Standard Assumptions Theoretical Financial Mathematics
+
+In the theory of mathematical finance, it is common to assume the log returns of a stock/index are normally distributed.
+
+Investigate if the log returns of stocks or indexes of your choosing are normally distributed. Some suggestions for exploration include:
+
+1) Test if there are period of times when the log-returns of a stock/index have evidence of normal distribution.
+2) Test if removing extremal return data creates a distribution with evidence of being normal.
+3) Create a personalized portfolio of stocks with historical log return data that is normally distributed.
+4) Test if the portfolio you created in the first mini-project has significant periods of time with evidence of normally distributed log returns.
+5) Gather x-number of historical stock data and just perform a normality test on their log return data to see if any of the stocks exhibit evidence of log returns that are normally distributed.
+* Commentary
+First of all, we choose a particular stock or index to look at.
+It is well known that a diversified portfolio of stocks increases the reliability of returns (in excess of 3 month Treasury bills) and reduces volatility.
+Therefore, we choose the S&P 500 as our asset, since it is reasonably well diversified,  and most historical data.
+Our data for the S&P 500 stretches back to
+
+#+begin_src jupyter-python :exports both :session MiniProject2
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+%matplotlib inline
+#+end_src
+
+#+RESULTS:
+
+#+begin_src jupyter-python :exports both :session MiniProject2
+def csv_to_series(csv_path):
+    s = pd.read_csv(csv_path)
+    s["Date"] = pd.to_datetime(s["Date"])
+    s.set_index("Date",inplace = True)
+    returns = (s.shift(-1)-s) / s
+    returns.columns = [ticker + " Returns" for ticker in s.columns]
+    return pd.concat([s, returns],axis=1)
+
+sp500 = csv_to_series("./SP500-returns.csv")
+sp500.rename(columns= {"SPYSIM": "SP500", "SPYSIM Returns":"SP500 Returns"},inplace=True)
+log_returns = np.log((1+sp500["SP500 Returns"]).dropna())
+#+end_src
+
+#+RESULTS:
+
+As a preliminary look, we can look at the distribution of daily returns.
+#+begin_src jupyter-python :exports both :session MiniProject2
+log_returns.plot(kind="hist",
+                          bins = 100,
+                          xlabel="Log Returns",
+                          ylabel="Observations",
+                          title="Distribution of Daily S&P 500 Returns")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'Distribution of Daily S&P 500 Returns'}, xlabel='Log Returns', ylabel='Observations'>
+[[file:./.ob-jupyter/d4fbff01108847b314c9835106c4a77fde381025.png]]
+:END:
+
+Apart from the severe outliers forcing the \(x\) axis limits to be wider than we'd like, the distribution looks fairly normal.
+Of course, a visual inspection is far from sufficient for a test of normality.
+We can first "zoom in" to the zero point to viseually cut out he outliers.
+
+#+begin_src jupyter-python :exports both :session MiniProject2
+log_returns.plot(kind="hist",
+                          bins = 100,
+                          xlabel="Log Returns",
+                          ylabel="Observations",
+                          xlim=(-.1,.1),
+                          title="Distribution of Daily S&P 500 Returns")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'Distribution of Daily S&P 500 Returns'}, xlabel='Log Returns', ylabel='Observations'>
+[[file:./.ob-jupyter/30aabeb1e6437da158f112411c9df5b06e201547.png]]
+:END:
+
+We first note that the distribution is negatively skewed, with the left tail being fatter than the right tail.
+We can verify this empirically
+#+begin_src jupyter-python :exports both :session MiniProject2
+log_returns.skew()
+#+end_src
+
+#+RESULTS:
+: np.float64(-0.43940576052749036)
+
+Indeed, the distribution is negatively skewed.
+The value of skewness alone gives us a hint that the data are not normally distributed.
+We can inspect the location of the outliers.
+#+begin_src jupyter-python :exports both :session MiniProject2
+pd.DataFrame(log_returns).boxplot()
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: >
+[[file:./.ob-jupyter/05e24516b6cdd074c41d90f8515b5abe37b5d010.png]]
+:END:
+
+The vast majority of the log return values seem to lie in the interval \((-0.10,0.10)\).
+This is the range we will inspect.
+#+begin_src jupyter-python :exports both :session MiniProject2
+clamped=pd.DataFrame(log_returns[(log_returns <= 0.1) & (log_returns >= -0.1) ])
+clamped.boxplot()
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: >
+[[file:./.ob-jupyter/db40ca835c45cc249f6dd06f585951c5f931e59c.png]]
+:END:
+
+The boxplot still shows signs of negative skewness, but we can check if the magnitude of skewness is less than what we started with.
+#+begin_src jupyter-python :exports both :session MiniProject2
+clamped.skew()
+#+end_src
+
+#+RESULTS:
+: SP500 Returns   -0.330623
+: dtype: float64
+
+The skewness does decrease, but its value still indicates a distribution far from normal.
+It seems daily returns are too negatively skewed to recover a distribution that is normal.
+
+Instead, we can coarsen our return periods to weekly, monthly, and yearly returns to see if they exhibit different behaviours.
+
+#+begin_src jupyter-python :exports both :session MiniProject2
+weekly_logs = (1+sp500["SP500 Returns"]).groupby(pd.Grouper(freq="W-MON")).agg("prod")-1
+weekly_logs.plot(kind="hist",bins = 60,
+                 title="Weekly log Returns",
+                 xlabel="Log Returns")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'Weekly log Returns'}, xlabel='Log Returns', ylabel='Frequency'>
+[[file:./.ob-jupyter/69a8da46845117a6a4a98b733495abfdae5fb398.png]]
+:END:
+
+#+begin_src jupyter-python :exports both :session MiniProject2
+weekly_logs.skew()
+#+end_src
+
+#+RESULTS:
+: np.float64(-0.3735465362387974)
+
+On the collection of all the data, the skewness of the weekly log returns is less skewed than the daily log returns, but still skewed in the same direction.
+We can coarsen the view to further to monthly returns.
+#+begin_src jupyter-python :exports both :session MiniProject2
+monthly_logs = (1+sp500["SP500 Returns"]).groupby(pd.Grouper(freq="ME")).agg("prod")-1
+monthly_logs.plot(kind="hist",bins = 60,
+                 title="Monthly log Returns",
+                 xlabel="Log Returns")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'Monthly log Returns'}, xlabel='Log Returns', ylabel='Frequency'>
+[[file:./.ob-jupyter/de9e4f8ae826021c845660cad985e3281c52635f.png]]
+:END:
+#+begin_src jupyter-python :exports both :session MiniProject2
+monthly_logs.skew()
+#+end_src
+
+#+RESULTS:
+: np.float64(0.15167695900350628)
+
+This time, the distribution is positively skewed.
+
+** Formal Tests for Normality
+So far, our tests for normality has been heuristic in nature.
+There are formal tests for normality such as she Shapiro-Wilk test, which we can employ.
+#+begin_src jupyter-python :exports both :session MiniProject2
+from scipy.stats import shapiro
+[float(shapiro(x)[1]) for x in [log_returns, weekly_logs, monthly_logs]]
+
+#+end_src
+
+#+RESULTS:
+| 3.818543836005726e-93 | 7.452572523456624e-51 | 3.2108640515548556e-28 |
+
+In every performance of the Shapiro-Wilk test, the resulting \(p\) value is decidedly below \(0.05\), so in every case we reject the null hypothesis that the data are normally distributed.
+
+On the other hand, the =normaltest= from =scipy.stats= uses skewness and kurtosis to compare against a normal distribtution.
+
+#+begin_src jupyter-python :exports both :session MiniProject2
+from scipy.stats import normaltest
+normaltest(pd.concat([log_returns, weekly_logs, monthly_logs],axis=1),nan_policy='omit',axis=0).pvalue
+#+end_src
+
+#+RESULTS:
+: array([0.00000000e+00, 0.00000000e+00, 1.04865582e-61])
+
+Even in this test, there is sufficient evidence to reject the hypothesis that the data are normaly distributed.
+
+* A Portfolio with Normal Returns
+#+begin_src jupyter-python :exports both :session MiniProject2
+x = csv_to_series("~/Downloads/Return(3).csv")
+x.rename(columns = {"Porfolio 1":"Value", "Porfolio 1 Returns":"Returns"},inplace=True)
+np.log(x["Portfolio 1 Returns"]).skew()
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: /nix/store/kafsfw3zvjp69zc4mgvwnc541q726g48-python3.11-pandas-2.2.3/lib/python3.11/site-packages/pandas/core/arraylike.py:399: RuntimeWarning: invalid value encountered in log
+:   result = getattr(ufunc, method)(*inputs, **kwargs)
+: np.float64(-1.0049476364350918)
+:END:

@@ -1,0 +1,7 @@
+jupyter
+yfinance
+pandas
+numpy
+scipy
+matplotlib
+fredapi
