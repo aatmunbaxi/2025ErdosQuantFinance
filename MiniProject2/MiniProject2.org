@@ -121,13 +121,13 @@ clamped.skew()
 : SP500 Returns   -0.330623
 : dtype: float64
 
-The skewness does decrease, but its value still indicates a distribution far from normal.
+The skewness does decrease in magnitude, but its value still indicates a distribution far from normal.
 It seems daily returns are too negatively skewed to recover a distribution that is normal.
 
 Instead, we can coarsen our return periods to weekly, monthly, and yearly returns to see if they exhibit different behaviours.
 
 #+begin_src jupyter-python :exports both :session MiniProject2
-weekly_logs = (1+sp500["SP500 Returns"]).groupby(pd.Grouper(freq="W-MON")).agg("prod")-1
+weekly_logs = np.log((1+sp500["SP500 Returns"]).groupby(pd.Grouper(freq="W-MON")).agg("prod"))
 weekly_logs.plot(kind="hist",bins = 60,
                  title="Weekly log Returns",
                  xlabel="Log Returns")
@@ -136,7 +136,7 @@ weekly_logs.plot(kind="hist",bins = 60,
 #+RESULTS:
 :RESULTS:
 : <Axes: title={'center': 'Weekly log Returns'}, xlabel='Log Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/69a8da46845117a6a4a98b733495abfdae5fb398.png]]
+[[file:./.ob-jupyter/36dc02d2966e47a4f8716b31749615f39e4b42cc.png]]
 :END:
 
 #+begin_src jupyter-python :exports both :session MiniProject2
@@ -144,12 +144,12 @@ weekly_logs.skew()
 #+end_src
 
 #+RESULTS:
-: np.float64(-0.3735465362387974)
+: np.float64(-0.8428780928389739)
 
 On the collection of all the data, the skewness of the weekly log returns is less skewed than the daily log returns, but still skewed in the same direction.
 We can coarsen the view to further to monthly returns.
 #+begin_src jupyter-python :exports both :session MiniProject2
-monthly_logs = (1+sp500["SP500 Returns"]).groupby(pd.Grouper(freq="ME")).agg("prod")-1
+monthly_logs = np.log((1+sp500["SP500 Returns"]).groupby(pd.Grouper(freq="ME")).agg("prod"))
 monthly_logs.plot(kind="hist",bins = 60,
                  title="Monthly log Returns",
                  xlabel="Log Returns")
@@ -158,28 +158,49 @@ monthly_logs.plot(kind="hist",bins = 60,
 #+RESULTS:
 :RESULTS:
 : <Axes: title={'center': 'Monthly log Returns'}, xlabel='Log Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/de9e4f8ae826021c845660cad985e3281c52635f.png]]
+[[file:./.ob-jupyter/efe0ae858067225c5bf00ae4975c9fd1920b4b96.png]]
 :END:
 #+begin_src jupyter-python :exports both :session MiniProject2
 monthly_logs.skew()
 #+end_src
 
 #+RESULTS:
-: np.float64(0.15167695900350628)
+: np.float64(-0.564938766290267)
 
-This time, the distribution is positively skewed.
+Even monthy returns are negatively skewed.
+#+begin_src jupyter-python :exports both :session MiniProject2
+yearly_logs = np.log((1+sp500["SP500 Returns"]).groupby(pd.Grouper(freq="YE")).agg("prod"))
+yearly_logs.plot(kind="hist",bins = 60,
+                 title="log Yearly Returns",
+                 xlabel="Log Returns")
+#+end_src
 
-** Formal Tests for Normality
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'log Yearly Returns'}, xlabel='Log Returns', ylabel='Frequency'>
+[[file:./.ob-jupyter/9a910f6600ed6ae29d47d521bb5ed911f617cc3d.png]]
+:END:
+#+begin_src jupyter-python :exports both :session MiniProject2
+yearly_logs.skew()
+#+end_src
+
+#+RESULTS:
+: np.float64(-0.918299847545862)
+
+Even at time scales such as a year, returns of a diverse portfolio of US stocks shows little evidence of being normal.
+* Formal Tests for Normality
 So far, our tests for normality has been heuristic in nature.
 There are formal tests for normality such as she Shapiro-Wilk test, which we can employ.
+Below is the resulting \(p\) values extracted from the test, where the null hypothesis is that the data are normally distributed.
 #+begin_src jupyter-python :exports both :session MiniProject2
 from scipy.stats import shapiro
-[float(shapiro(x)[1]) for x in [log_returns, weekly_logs, monthly_logs]]
+print(f"Shapiro-Wilk p-values:\n {[float(shapiro(x)[1]) for x in [log_returns, weekly_logs, monthly_logs,yearly_logs]]}")
 
 #+end_src
 
 #+RESULTS:
-| 3.818543836005726e-93 | 7.452572523456624e-51 | 3.2108640515548556e-28 |
+: Shapiro-Wilk p-values:
+:  [3.818543836005726e-93, 1.178035812534928e-52, 1.2008592564647532e-28, 0.00021204832741660105]
 
 In every performance of the Shapiro-Wilk test, the resulting \(p\) value is decidedly below \(0.05\), so in every case we reject the null hypothesis that the data are normally distributed.
 
@@ -187,19 +208,74 @@ On the other hand, the =normaltest= from =scipy.stats= uses skewness and kurtosi
 
 #+begin_src jupyter-python :exports both :session MiniProject2
 from scipy.stats import normaltest
-normaltest(pd.concat([log_returns, weekly_logs, monthly_logs],axis=1),nan_policy='omit',axis=0).pvalue
+print(f"p-values; skewness-kurtosis test:\n{normaltest(pd.concat([log_returns, weekly_logs, monthly_logs,yearly_logs],axis=1),nan_policy='omit',axis=0).pvalue}")
 #+end_src
 
 #+RESULTS:
-: array([0.00000000e+00, 0.00000000e+00, 1.04865582e-61])
+: p-values; skewness-kurtosis test:
+: [0.00000000e+00 0.00000000e+00 2.01874396e-72 5.74204997e-06]
 
-Even in this test, there is sufficient evidence to reject the hypothesis that the data are normaly distributed.
+In this test, too, there is sufficient evidence to reject the hypothesis that the data are normaly distributed at all sampled time scales.
 
-* A Portfolio with Normal Returns
+* Testing a Particular Bull Market
+Because a of the pervasive observation that stock returns are negatively skewed, we might have better luck finding evidence of normality of stock returns during bull markets—periods where the market trends upward without a 20% drop from its high.
+We examine the longest bull market in US history: the period between December 1987 and March 2000
 #+begin_src jupyter-python :exports both :session MiniProject2
-x = csv_to_series("~/Downloads/Return(3).csv")
-x.rename(columns = {"Porfolio 1":"Value", "Porfolio 1 Returns":"Returns"},inplace=True)
-np.log(x["Portfolio 1 Returns"]).skew()
+start, end = ("1987-12-01","2000-03-01")
+log_returns[start:end].plot(kind="hist",bins=50,xlabel="Log Daily Returns")
+
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: xlabel='Log Daily Returns', ylabel='Frequency'>
+[[file:./.ob-jupyter/9306d0e224222e369f70a9de95c87383562c2f3d.png]]
+:END:
+
+Looking at the distribution of daily returns, we can already see a thinning of the tails, though the daily returns still appear negatively distributed.
+We investigate the \(p\) value of the formal Shapiro-Wilk test on the monthly returns during this bull market.
+#+begin_src jupyter-python :exports both :session MiniProject2
+print(f"p = {shapiro(monthly_logs[start:end])[1]}")
+#+end_src
+
+#+RESULTS:
+: p = 0.08925705296206543
+
+With a tolerance of \(p = 0.05\), there is not sufficient evidence to reject the null hypothesis that the data is normally distributed.
+Thus, there is possible evidence of the log monthly returns of the S&P 500 being normally distributed during the 1987-2000 bull market.
+
+Let us investigate the second longest bull market spanning from March 2009 to February 2020.
+#+begin_src jupyter-python :exports both :session MiniProject2
+start, end = ("2009-03-01", "2020-02-01")
+log_returns[start:end].plot(kind="hist",bins=50,xlabel="Log Daily Returns",
+                            title="Log Daily Returns Mar 2009-Feb 2020")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'Log Daily Returns Mar 2009-Feb 2020'}, xlabel='Log Daily Returns', ylabel='Frequency'>
+[[file:./.ob-jupyter/8bad1096d3751816f3c8024ea380f46b15f3dd5d.png]]
+:END:
+
+This time, the left tail is much fatter than the previous bull market under examination.
+#+begin_src jupyter-python :exports both :session MiniProject2
+print(f"p = {shapiro(monthly_logs[start:end])[1]}")
+#+end_src
+
+#+RESULTS:
+: p = 0.0011705343595598472
+
+As the visual inspection suggested, we cannot conclude normality of the monthly returns in this period.
+
+
+** Conclusion
+We can conclude that it is very difficult to find periods of time and scales of time where stock returns are normally distributed, even when volatility is controlled by using a diversified portfolio.
+This suggests that the assumption of normal stock returns used in the Black-Scholes model does not reflect reality.
+It still serves the useful purpose of helping extract closed-form equation
+* A Portfolio with Normal Returns
+For some commentary, we should not expect it to be easy to construct a portfolio of stocks (i.e. equities) with normal returns over a significant period of time.
+Equities are inherently riskier than other financial assets like bonds, and show fatter tails in distributions of historical returns on virtually all time scales.
+#+begin_src jupyter-python :exports both :session MiniProject2
 #+end_src
 
 #+RESULTS:
