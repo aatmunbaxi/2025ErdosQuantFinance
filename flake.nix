@@ -15,9 +15,7 @@
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
           venvDir = ".venv";
-          packages = with pkgs; [ poetry gnumake  python311 ] ++ (with python311Packages; [
-            jupyter
-            jupytext
+          packages = with pkgs; [ poetry gnumake python311 ] ++ (with python311Packages; [
             pandas
             matplotlib
             pip
@@ -28,7 +26,11 @@
             scikitlearn
             pandoc
           ]);
+          LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${pkgs.stdenv.cc.cc.lib}/lib";
         };
+        shellHook = ''
+                ln -s ./.venv/bin/jupyter ${pkgs.python311Packages.jupyter}/bin/jupyter
+                '';
       });
     };
 }
