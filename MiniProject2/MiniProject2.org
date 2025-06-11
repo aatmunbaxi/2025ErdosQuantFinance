@@ -15,9 +15,9 @@ Investigate if the log returns of stocks or indexes of your choosing are normall
 * Commentary
 First of all, we choose a particular stock or index to look at.
 It is well known that a diversified portfolio of stocks increases the reliability of returns (in excess of 3 month Treasury bills) and reduces volatility.
-Therefore, we choose the S&P 500 as our asset, since it is reasonably well diversified,  and most historical data.
-Our data for the S&P 500 stretches back to
+Therefore, we choose the S&P 500 as our asset, since it is well diversified,  and has the longest running historical total return data that we could find.
 
+* Data Retrieval
 #+begin_src jupyter-python :exports both :session MiniProject2
 import numpy as np
 import pandas as pd
@@ -42,7 +42,7 @@ log_returns = np.log((1+sp500["SP500 Returns"]).dropna())
 #+end_src
 
 #+RESULTS:
-
+* Heuristic Checks for Lognormality
 As a preliminary look, we can look at the distribution of daily returns.
 #+begin_src jupyter-python :exports both :session MiniProject2
 log_returns.plot(kind="hist",
@@ -58,9 +58,8 @@ log_returns.plot(kind="hist",
 [[file:./.ob-jupyter/d4fbff01108847b314c9835106c4a77fde381025.png]]
 :END:
 
-Apart from the severe outliers forcing the \(x\) axis limits to be wider than we'd like, the distribution looks fairly normal.
-Of course, a visual inspection is far from sufficient for a test of normality.
-We can first "zoom in" to the zero point to viseually cut out he outliers.
+A visual inspection is far from sufficient for a test of normality.
+We can first "zoom in" to the zero point to viseually cut out the outliers of log returns of absolute magnitude \(> 0.10\).
 
 #+begin_src jupyter-python :exports both :session MiniProject2
 log_returns.plot(kind="hist",
@@ -77,7 +76,7 @@ log_returns.plot(kind="hist",
 [[file:./.ob-jupyter/30aabeb1e6437da158f112411c9df5b06e201547.png]]
 :END:
 
-We first note that the distribution is negatively skewed, with the left tail being fatter than the right tail.
+We first note that the distribution appears negatively skewed, with the left tail being fatter than the right tail.
 We can verify this empirically
 #+begin_src jupyter-python :exports both :session MiniProject2
 log_returns.skew()
@@ -88,7 +87,7 @@ log_returns.skew()
 
 Indeed, the distribution is negatively skewed.
 The value of skewness alone gives us a hint that the data are not normally distributed.
-We can inspect the location of the outliers.
+
 #+begin_src jupyter-python :exports both :session MiniProject2
 pd.DataFrame(log_returns).boxplot()
 #+end_src
@@ -125,6 +124,7 @@ The skewness does decrease in magnitude, but its value still indicates a distrib
 It seems daily returns are too negatively skewed to recover a distribution that is normal.
 
 Instead, we can coarsen our return periods to weekly, monthly, and yearly returns to see if they exhibit different behaviours.
+We should expect this to be an improvement on log-daily returns, since the reliability of stock returns tends to increase the longer the time period you look at.
 
 #+begin_src jupyter-python :exports both :session MiniProject2
 weekly_logs = np.log((1+sp500["SP500 Returns"]).groupby(pd.Grouper(freq="W-MON")).agg("prod"))
@@ -194,8 +194,8 @@ There are formal tests for normality such as she Shapiro-Wilk test, which we can
 Below is the resulting \(p\) values extracted from the test, where the null hypothesis is that the data are normally distributed.
 #+begin_src jupyter-python :exports both :session MiniProject2
 from scipy.stats import shapiro
-print(f"Shapiro-Wilk p-values:\n {[float(shapiro(x)[1]) for x in [log_returns, weekly_logs, monthly_logs,yearly_logs]]}")
-
+results = {str(x): float(shapiro(x)[1]) for x in [log_returns,weekly_logs, monthly_logs, yearly_logs]}
+print(f"Shapiro-Wilk p-values:\n {results}")
 #+end_src
 
 #+RESULTS:
@@ -219,6 +219,7 @@ In this test, too, there is sufficient evidence to reject the hypothesis that th
 
 * Testing a Particular Bull Market
 Because a of the pervasive observation that stock returns are negatively skewed, we might have better luck finding evidence of normality of stock returns during bull markets—periods where the market trends upward without a 20% drop from its high.
+Periods of volatili
 We examine the longest bull market in US history: the period between December 1987 and March 2000
 #+begin_src jupyter-python :exports both :session MiniProject2
 start, end = ("1987-12-01","2000-03-01")
@@ -272,9 +273,15 @@ As the visual inspection suggested, we cannot conclude normality of the monthly 
 We can conclude that it is very difficult to find periods of time and scales of time where stock returns are normally distributed, even when volatility is controlled by using a diversified portfolio.
 This suggests that the assumption of normal stock returns used in the Black-Scholes model does not reflect reality.
 It still serves the useful purpose of helping extract closed-form equation
-* A Portfolio with Normal Returns
-For some commentary, we should not expect it to be easy to construct a portfolio of stocks (i.e. equities) with normal returns over a significant period of time.
+* A Portfolio with Normal Return
+For some commentary, we should not expect it to be easy to construct a portfolio of stocks (i.e. *equities*) with lognormal returns over a significant period of time.
 Equities are inherently riskier than other financial assets like bonds, and show fatter tails in distributions of historical returns on virtually all time scales.
+One typically reduces the volatility of a portfolio of stocks by allocating to "safer" kinds of stocks (e.g. consumer staples, utilities) or by moving away from stocks altogether and using bonds.
+Since we are interested in stocks only, we will work within the confines of equities.
+
+The empirical evidence of more diversification = less volatility is too overwhelming for us to escape this framework, so we will continue to hold a diverse  portfolio of equities.
+Notably, we want to move away from holding marke cap weights (like with the S&P 500), since we have demonstrated empirically that such a portfolio shows little evidence of lognormal returns over long periods of time.
+
 #+begin_src jupyter-python :exports both :session MiniProject2
 #+end_src
 
@@ -284,3 +291,8 @@ Equities are inherently riskier than other financial assets like bonds, and show
 :   result = getattr(ufunc, method)(*inputs, **kwargs)
 : np.float64(-1.0049476364350918)
 :END:
+
+# Local Variables:
+# compile-command: "pandoc -s -o MiniProject1.ipynb MiniProject1.org -V header-includes='<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>'"
+# jupyter-executable: "~/code/erdos-qfinance-projects/.venv/bin/jupyter"
+# End:
