@@ -290,151 +290,8 @@ Equities are inherently riskier than other financial assets like bonds, and show
 One typically reduces the volatility of a portfolio of stocks by allocating to "safer" kinds of stocks (e.g. consumer staples, utilities) or by moving away from stocks altogether and using bonds.
 Since we are interested in stocks only, we will work within the confines of equities.
 
-The empirical evidence of more diversification = less volatility is too overwhelming for us to escape this framework, so we will continue to hold a diverse  portfolio of equities.
-Notably, we want to move away from holding market cap weights (like with the S&P 500), since we have demonstrated empirically that such a portfolio shows little evidence of lognormal returns over long periods of time.
-
-We will be counterbalancing the risky S&P 500 with utilities and consumer staples, which are sectors commonly thought to be safer than other types of stocks.
-The data for these sectors will be taken from the Fama-French data set of historical returns of utilities and consumer staples, with XLU and XLP filling in the more modern data, respectively.
-#+begin_src jupyter-python :exports both :session MiniProject2
-xlu = csv_to_series("./utilities.csv").dropna()
-xlp = csv_to_series("./staples.csv").dropna()
-#+end_src
-
-#+RESULTS:
-
-#+begin_src jupyter-python :exports both :session MiniProject2
-np.log(pd.concat([xlu["Utilities"],xlp["Staples"]]
-                 ,axis=1).iloc[::5,:]).plot(title="Log value; $10000 Portfolio Invested")
-#+end_src
-
-#+RESULTS:
-:RESULTS:
-: <Axes: title={'center': 'Log value; $10000 Portfolio Invested'}, xlabel='Date'>
-[[file:./.ob-jupyter/1d395ecf5ad7acdb421facc7c9472e88ce34141a.png]]
-:END:
-
-#+begin_src jupyter-python :exports both :session MiniProject2
-log_xlu = np.log(1+xlu["Utilities Returns"])
-log_xlp = np.log(1+xlp["Staples Returns"])
-pd.concat([log_xlu,log_xlp],axis=1).plot(kind="hist",layout=(2,1),
-                                         subplots=True,
-                                         bins=70,
-                                         xlabel = "Daily Log Returns",
-                                         title = "Distribution of Daily Log Returns")
-#+end_src
-
-#+RESULTS:
-:RESULTS:
-: array([[<Axes: xlabel='Daily Log Returns', ylabel='Frequency'>],
-:        [<Axes: xlabel='Daily Log Returns', ylabel='Frequency'>]],
-:       dtype=object)
-[[file:./.ob-jupyter/619df6b3ee5ac84e5c46c722cd0c7193208686d1.png]]
-:END:
-#+begin_src jupyter-python :exports both :session MiniProject2
-pd.concat([log_xlu,log_xlp],axis=1).skew()
-#+end_src
-
-#+RESULTS:
-: Utilities Returns   -0.179888
-: Staples Returns     -0.495754
-: dtype: float64
-
-Utilities display a distribution of daily returns less negatively skewed than the S&P 500.
-
-#+begin_src jupyter-python :exports both :session MiniProject2
-xlu_logmonthly = log_xlu.groupby(pd.Grouper(freq="ME")).agg("sum")
-xlp_logmonthly = log_xlp.groupby(pd.Grouper(freq="ME")).agg("sum")
-xlu_logweekly= log_xlu.groupby(pd.Grouper(freq="W-MON")).agg("sum")
-xlp_logweekly= log_xlp.groupby(pd.Grouper(freq="W-MON")).agg("sum")
-xlu_logyearly= log_xlu.groupby(pd.Grouper(freq="YE")).agg("sum")
-xlp_logyearly= log_xlp.groupby(pd.Grouper(freq="YE")).agg("sum")
-#+end_src
-
-#+RESULTS:
-
-#+begin_src jupyter-python :exports both :session MiniProject2
-pd.concat([xlu_logweekly,xlp_logweekly],axis=1).plot(kind="hist",subplots=True,bins=70)
-#+end_src
-
-#+RESULTS:
-:RESULTS:
-: array([<Axes: ylabel='Frequency'>, <Axes: ylabel='Frequency'>],
-:       dtype=object)
-[[file:./.ob-jupyter/7744a0e3bf387a6822ec553ee99e3649d72525c9.png]]
-:END:
-
-#+begin_src jupyter-python :exports both :session MiniProject2
-plt.title("Distribution of Logdaily Returns; Consumer Staples")
-plt.xlabel("")
-sns.histplot(xlp["Logdaily Returns"]["1990-01-01":])
-#+end_src
-
-#+RESULTS:
-:RESULTS:
-# [goto error]
-#+begin_example
-[31m---------------------------------------------------------------------------[39m
-[31mKeyError[39m                                  Traceback (most recent call last)
-[36mFile [39m[32m/nix/store/34qfdzyyka9y6dh0gxniy7py8462lq2g-python3.12-pandas-2.2.3/lib/python3.12/site-packages/pandas/core/indexes/base.py:3805[39m, in [36mIndex.get_loc[39m[34m(self, key)[39m
-[32m   3804[39m [38;5;28;01mtry[39;00m:
-[32m-> [39m[32m3805[39m     [38;5;28;01mreturn[39;00m [38;5;28;43mself[39;49m[43m.[49m[43m_engine[49m[43m.[49m[43mget_loc[49m[43m([49m[43mcasted_key[49m[43m)[49m
-[32m   3806[39m [38;5;28;01mexcept[39;00m [38;5;167;01mKeyError[39;00m [38;5;28;01mas[39;00m err:
-
-[36mFile [39m[32mindex.pyx:167[39m, in [36mpandas._libs.index.IndexEngine.get_loc[39m[34m()[39m
-
-[36mFile [39m[32mindex.pyx:196[39m, in [36mpandas._libs.index.IndexEngine.get_loc[39m[34m()[39m
-
-[36mFile [39m[32mpandas/_libs/hashtable_class_helper.pxi:7081[39m, in [36mpandas._libs.hashtable.PyObjectHashTable.get_item[39m[34m()[39m
-
-[36mFile [39m[32mpandas/_libs/hashtable_class_helper.pxi:7089[39m, in [36mpandas._libs.hashtable.PyObjectHashTable.get_item[39m[34m()[39m
-
-[31mKeyError[39m: 'Logdaily Returns'
-
-The above exception was the direct cause of the following exception:
-
-[31mKeyError[39m                                  Traceback (most recent call last)
-[36mCell[39m[36m [39m[32mIn[301][39m[32m, line 3[39m
-[32m      1[39m plt.title([33m"[39m[33mDistribution of Logdaily Returns; Consumer Staples[39m[33m"[39m)
-[32m      2[39m plt.xlabel([33m"[39m[33m"[39m)
-[32m----> [39m[32m3[39m sns.histplot([43mxlp[49m[43m[[49m[33;43m"[39;49m[33;43mLogdaily Returns[39;49m[33;43m"[39;49m[43m][49m[[33m"[39m[33m1990-01-01[39m[33m"[39m:])
-
-[36mFile [39m[32m/nix/store/34qfdzyyka9y6dh0gxniy7py8462lq2g-python3.12-pandas-2.2.3/lib/python3.12/site-packages/pandas/core/frame.py:4102[39m, in [36mDataFrame.__getitem__[39m[34m(self, key)[39m
-[32m   4100[39m [38;5;28;01mif[39;00m [38;5;28mself[39m.columns.nlevels > [32m1[39m:
-[32m   4101[39m     [38;5;28;01mreturn[39;00m [38;5;28mself[39m._getitem_multilevel(key)
-[32m-> [39m[32m4102[39m indexer = [38;5;28;43mself[39;49m[43m.[49m[43mcolumns[49m[43m.[49m[43mget_loc[49m[43m([49m[43mkey[49m[43m)[49m
-[32m   4103[39m [38;5;28;01mif[39;00m is_integer(indexer):
-[32m   4104[39m     indexer = [indexer]
-
-[36mFile [39m[32m/nix/store/34qfdzyyka9y6dh0gxniy7py8462lq2g-python3.12-pandas-2.2.3/lib/python3.12/site-packages/pandas/core/indexes/base.py:3812[39m, in [36mIndex.get_loc[39m[34m(self, key)[39m
-[32m   3807[39m     [38;5;28;01mif[39;00m [38;5;28misinstance[39m(casted_key, [38;5;28mslice[39m) [38;5;129;01mor[39;00m (
-[32m   3808[39m         [38;5;28misinstance[39m(casted_key, abc.Iterable)
-[32m   3809[39m         [38;5;129;01mand[39;00m [38;5;28many[39m([38;5;28misinstance[39m(x, [38;5;28mslice[39m) [38;5;28;01mfor[39;00m x [38;5;129;01min[39;00m casted_key)
-[32m   3810[39m     ):
-[32m   3811[39m         [38;5;28;01mraise[39;00m InvalidIndexError(key)
-[32m-> [39m[32m3812[39m     [38;5;28;01mraise[39;00m [38;5;167;01mKeyError[39;00m(key) [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01merr[39;00m
-[32m   3813[39m [38;5;28;01mexcept[39;00m [38;5;167;01mTypeError[39;00m:
-[32m   3814[39m     [38;5;66;03m# If we have a listlike key, _check_indexing_error will raise[39;00m
-[32m   3815[39m     [38;5;66;03m#  InvalidIndexError. Otherwise we fall through and re-raise[39;00m
-[32m   3816[39m     [38;5;66;03m#  the TypeError.[39;00m
-[32m   3817[39m     [38;5;28mself[39m._check_indexing_error(key)
-
-[31mKeyError[39m: 'Logdaily Returns'
-#+end_example
-[[file:./.ob-jupyter/33630e2fed3aa0a9fd8ef842bf5963178aa5a28b.png]]
-:END:
-
-From the period from 1990 to the present day
-
-#+begin_src jupyter-python :session MiniProject2
-log_xlp.plot(kind="box")
-#+end_src
-
-#+RESULTS:
-:RESULTS:
-: <Axes: >
-[[file:./.ob-jupyter/40ef20951d3c7a430d5a2822c0e4fe8b70beb677.png]]
-:END:
-
+We hypothesize that a diverse portfolio is the wrong way to mine logreturns that might be normal.
+Instead, we look at a particular individual stock in the consumer staple sector, Coca-Cola (KO).
 #+begin_src jupyter-python :session MiniProject2
 ko = csv_to_series("./KO.csv")
 log_ko = np.log(1+ko["KO Returns"])
@@ -451,7 +308,6 @@ shapiro(log_ko.groupby(pd.Grouper(freq="W-MON")).agg("sum"))
 
 #+begin_src jupyter-python :session MiniProject2
 p1 = np.log(1+ 0.20*sp500["SP500 Returns"] + 0.40*ko["KO Returns"] + 0.40*xlp["Staples Returns"])
-# p1.plot(kind="hist",bins=80,xlim=(-.1,.1))
 p1[start:end].plot(kind="hist",bins=80)
 shapiro(p1[start:end])
 #+end_src
@@ -519,7 +375,7 @@ log_mcd = np.log(1+mcd["MCD Returns"])
 #+RESULTS:
 
 #+begin_src jupyter-python :session MiniProject2
-w1 = 0.5
+w1 = 0.8
 w2 = 1-w1
 p1 = np.log(1+ w1*ko["KO Returns"] + w2*mcd["MCD Returns"])
 p1[s1:s2].plot(kind="hist",bins=80)
@@ -528,10 +384,10 @@ p1[s1:s2].plot(kind="hist",bins=80)
 #+RESULTS:
 :RESULTS:
 : <Axes: ylabel='Frequency'>
-[[file:./.ob-jupyter/ef8326c7813179664ce83fbe87dc63a1d481e55c.png]]
+[[file:./.ob-jupyter/e11c500116c881ecff19d4f509772fe6e9982d0e.png]]
 :END:
 
-Even with the addition of a single stock to our portfolio, our distribution gets a big hit of negative skewness, pushing it away from normality.
+Even with the addition of a single stock to our portfolio at 20% weight, our distribution gets a big hit of negative skewness, pushing it away from normality.
 
 * An Explanation of more diversity=less normal
 As a function of diversification, negative skewness increases in magnitude.
