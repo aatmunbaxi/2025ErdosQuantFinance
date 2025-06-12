@@ -1,7 +1,6 @@
 jupyter
-yfinance
+seaborn
 pandas
 numpy
 scipy
 matplotlib
-fredapi

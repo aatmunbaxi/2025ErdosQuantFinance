@@ -16,16 +16,24 @@ Investigate if the log returns of stocks or indexes of your choosing are normall
 First of all, we choose a particular stock or index to look at.
 It is well known that a diversified portfolio of stocks increases the reliability of returns (in excess of 3 month Treasury bills) and reduces volatility.
 Therefore, we choose the S&P 500 as our asset, since it is well diversified,  and has the longest running historical total return data that we could find.
-
 * Data Retrieval
+:PROPERTIES:
+:ARCHIVE_TIME: 2025-06-11 Wed 18:30
+:ARCHIVE_FILE: ~/code/2025ErdosQuantFinance/MiniProject2/MiniProject2.org
+:ARCHIVE_CATEGORY: MiniProject2
+:END:
 #+begin_src jupyter-python :exports both :session MiniProject2
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
+
 %matplotlib inline
+sns.set_style("darkgrid")
 #+end_src
 
 #+RESULTS:
+
 
 #+begin_src jupyter-python :exports both :session MiniProject2
 def csv_to_series(csv_path):
@@ -42,6 +50,7 @@ log_returns = np.log((1+sp500["SP500 Returns"]).dropna())
 #+end_src
 
 #+RESULTS:
+
 * Heuristic Checks for Lognormality
 As a preliminary look, we can look at the distribution of daily returns.
 #+begin_src jupyter-python :exports both :session MiniProject2
@@ -55,7 +64,7 @@ log_returns.plot(kind="hist",
 #+RESULTS:
 :RESULTS:
 : <Axes: title={'center': 'Distribution of Daily S&P 500 Returns'}, xlabel='Log Returns', ylabel='Observations'>
-[[file:./.ob-jupyter/d4fbff01108847b314c9835106c4a77fde381025.png]]
+[[file:./.ob-jupyter/205619ec326b7588ff9d17b3cd9544b56a7dbbad.png]]
 :END:
 
 A visual inspection is far from sufficient for a test of normality.
@@ -73,7 +82,7 @@ log_returns.plot(kind="hist",
 #+RESULTS:
 :RESULTS:
 : <Axes: title={'center': 'Distribution of Daily S&P 500 Returns'}, xlabel='Log Returns', ylabel='Observations'>
-[[file:./.ob-jupyter/30aabeb1e6437da158f112411c9df5b06e201547.png]]
+[[file:./.ob-jupyter/77035ca36c035b9c75160cea8ade042dc6f49b24.png]]
 :END:
 
 We first note that the distribution appears negatively skewed, with the left tail being fatter than the right tail.
@@ -95,7 +104,7 @@ pd.DataFrame(log_returns).boxplot()
 #+RESULTS:
 :RESULTS:
 : <Axes: >
-[[file:./.ob-jupyter/05e24516b6cdd074c41d90f8515b5abe37b5d010.png]]
+[[file:./.ob-jupyter/436f0c75c4420456e3fce320645066acb1e7ad0d.png]]
 :END:
 
 The vast majority of the log return values seem to lie in the interval \((-0.10,0.10)\).
@@ -108,7 +117,7 @@ clamped.boxplot()
 #+RESULTS:
 :RESULTS:
 : <Axes: >
-[[file:./.ob-jupyter/db40ca835c45cc249f6dd06f585951c5f931e59c.png]]
+[[file:./.ob-jupyter/3d744855e14608e4a8b65bf3d052745f88b83aa7.png]]
 :END:
 
 The boxplot still shows signs of negative skewness, but we can check if the magnitude of skewness is less than what we started with.
@@ -136,7 +145,7 @@ weekly_logs.plot(kind="hist",bins = 60,
 #+RESULTS:
 :RESULTS:
 : <Axes: title={'center': 'Weekly log Returns'}, xlabel='Log Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/36dc02d2966e47a4f8716b31749615f39e4b42cc.png]]
+[[file:./.ob-jupyter/535d83082e2378e20fc386b198cca1dcf5268ee2.png]]
 :END:
 
 #+begin_src jupyter-python :exports both :session MiniProject2
@@ -158,7 +167,7 @@ monthly_logs.plot(kind="hist",bins = 60,
 #+RESULTS:
 :RESULTS:
 : <Axes: title={'center': 'Monthly log Returns'}, xlabel='Log Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/efe0ae858067225c5bf00ae4975c9fd1920b4b96.png]]
+[[file:./.ob-jupyter/dba3aa8a5210f398694841ce08dadbf3d9e7bbc2.png]]
 :END:
 #+begin_src jupyter-python :exports both :session MiniProject2
 monthly_logs.skew()
@@ -178,7 +187,7 @@ yearly_logs.plot(kind="hist",bins = 60,
 #+RESULTS:
 :RESULTS:
 : <Axes: title={'center': 'log Yearly Returns'}, xlabel='Log Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/9a910f6600ed6ae29d47d521bb5ed911f617cc3d.png]]
+[[file:./.ob-jupyter/f8d4426c56599a2559867a4936d2eabc7d3b6861.png]]
 :END:
 #+begin_src jupyter-python :exports both :session MiniProject2
 yearly_logs.skew()
@@ -200,7 +209,11 @@ print(f"Shapiro-Wilk p-values:\n {results}")
 
 #+RESULTS:
 : Shapiro-Wilk p-values:
-:  [3.818543836005726e-93, 1.178035812534928e-52, 1.2008592564647532e-28, 0.00021204832741660105]
+:  {'Date\n1885-03-20   -0.007865\n1885-03-23   -0.010866\n1885-03-24    0.008595\n1885-03-25    0.008316\n1885-03-26    0.000630\n                ...   \n2025-05-22   -0.006845\n2025-05-23    0.020581\n2025-05-27   -0.005798\n2025-05-28    0.003943\n2025-05-29   -0.001115\nName: SP500 Returns, Length: 35112, dtype: float64': 3.818543836005726e-93, 'Date\n1885-03-23   -0.018731\n1885-03-30    0.008426\n1885-04-06   -0.011074\n1885-04-13    0.038922\n1885-04-20    0.000452\n                ...   \n2025-05-05    0.008068\n2025-05-12    0.048979\n2025-05-19    0.010208\n2025-05-26   -0.002857\n2025-06-02   -0.002970\nFreq: W-MON, Name: SP500 Returns, Length: 7316, dtype: float64': 1.178035812534928e-52, 'Date\n1885-03-31   -0.009045\n1885-04-30    0.029342\n1885-05-31   -0.026852\n1885-06-30    0.003949\n1885-07-31    0.091858\n                ...   \n2025-01-31    0.022285\n2025-02-28   -0.023628\n2025-03-31   -0.036759\n2025-04-30   -0.004388\n2025-05-31    0.053962\nFreq: ME, Name: SP500 Returns, Length: 1683, dtype: float64': 1.2008592564647532e-28, 'Date\n1885-12-31    0.278762\n1886-12-31    0.079888\n1887-12-31   -0.043394\n1888-12-31    0.087422\n1889-12-31    0.101203\n                ...   \n2021-12-31    0.273082\n2022-12-31   -0.209597\n2023-12-31    0.232158\n2024-12-31    0.226321\n2025-12-31    0.011472\nFreq: YE-DEC, Name: SP500 Returns, Length: 141, dtype: float64': 0.00021204832741660105}
+: /nix/store/8f9zfpbmybfl09aq4a9nzp8a9gwgqjbf-python3.12-scipy-1.15.3/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:586: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 35112.
+:   res = hypotest_fun_out(*samples, **kwds)
+: /nix/store/8f9zfpbmybfl09aq4a9nzp8a9gwgqjbf-python3.12-scipy-1.15.3/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:586: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 7316.
+:   res = hypotest_fun_out(*samples, **kwds)
 
 In every performance of the Shapiro-Wilk test, the resulting \(p\) value is decidedly below \(0.05\), so in every case we reject the null hypothesis that the data are normally distributed.
 
@@ -230,7 +243,7 @@ log_returns[start:end].plot(kind="hist",bins=50,xlabel="Log Daily Returns")
 #+RESULTS:
 :RESULTS:
 : <Axes: xlabel='Log Daily Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/9306d0e224222e369f70a9de95c87383562c2f3d.png]]
+[[file:./.ob-jupyter/4562bfd97122c54278ffd2b558102cb4786104d5.png]]
 :END:
 
 Looking at the distribution of daily returns, we can already see a thinning of the tails, though the daily returns still appear negatively distributed.
@@ -255,7 +268,7 @@ log_returns[start:end].plot(kind="hist",bins=50,xlabel="Log Daily Returns",
 #+RESULTS:
 :RESULTS:
 : <Axes: title={'center': 'Log Daily Returns Mar 2009-Feb 2020'}, xlabel='Log Daily Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/8bad1096d3751816f3c8024ea380f46b15f3dd5d.png]]
+[[file:./.ob-jupyter/5b4f189bacc8d07a251a1befbe4e44cfb7cc1e16.png]]
 :END:
 
 This time, the left tail is much fatter than the previous bull market under examination.
@@ -280,19 +293,94 @@ One typically reduces the volatility of a portfolio of stocks by allocating to "
 Since we are interested in stocks only, we will work within the confines of equities.
 
 The empirical evidence of more diversification = less volatility is too overwhelming for us to escape this framework, so we will continue to hold a diverse  portfolio of equities.
-Notably, we want to move away from holding marke cap weights (like with the S&P 500), since we have demonstrated empirically that such a portfolio shows little evidence of lognormal returns over long periods of time.
+Notably, we want to move away from holding market cap weights (like with the S&P 500), since we have demonstrated empirically that such a portfolio shows little evidence of lognormal returns over long periods of time.
+
+We will be counterbalancing the risky S&P 500 with utilities and consumer staples, which are sectors commonly thought to be safer than other types of stocks.
+#+begin_src jupyter-python :exports both :session MiniProject2
+xlu = csv_to_series("./utilities.csv").dropna()
+xlp = csv_to_series("./staples.csv").dropna()
+#+end_src
+
+#+RESULTS:
 
 #+begin_src jupyter-python :exports both :session MiniProject2
+np.log(pd.concat([xlu["Utilities"],xlp["Staples"]]
+                 ,axis=1).iloc[::5,:]).plot(title="Log value")
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: /nix/store/kafsfw3zvjp69zc4mgvwnc541q726g48-python3.11-pandas-2.2.3/lib/python3.11/site-packages/pandas/core/arraylike.py:399: RuntimeWarning: invalid value encountered in log
-:   result = getattr(ufunc, method)(*inputs, **kwargs)
-: np.float64(-1.0049476364350918)
+: <Axes: title={'center': 'Log value'}, xlabel='Date'>
+[[file:./.ob-jupyter/eb3e2594ac412436015d05babfcae8716274c256.png]]
+:END:
+
+#+begin_src jupyter-python :exports both :session MiniProject2
+log_xlu = np.log(1+xlu["Utilities Returns"])
+log_xlp = np.log(1+xlp["Staples Returns"])
+pd.concat([log_xlu,log_xlp],axis=1).plot(kind="hist",layout=(2,1),
+                                         subplots=True,
+                                         bins=70,
+                                         xlabel = "Daily Log Returns",
+                                         title = "Distribution of Daily Log Returns")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: array([[<Axes: xlabel='Daily Log Returns', ylabel='Frequency'>],
+:        [<Axes: xlabel='Daily Log Returns', ylabel='Frequency'>]],
+:       dtype=object)
+[[file:./.ob-jupyter/619df6b3ee5ac84e5c46c722cd0c7193208686d1.png]]
+:END:
+#+begin_src jupyter-python :exports both :session MiniProject2
+pd.concat([log_xlu,log_xlp],axis=1).skew()
+#+end_src
+
+#+RESULTS:
+: Utilities Returns   -0.179888
+: Staples Returns     -0.495754
+: dtype: float64
+
+Utilities display a distribution of daily returns less negatively skewed than the S&P 500.
+
+#+begin_src jupyter-python :exports both :session MiniProject2
+xlu_logmonthly = log_xlu.groupby(pd.Grouper(freq="ME")).agg("sum")
+xlp_logmonthly = log_xlp.groupby(pd.Grouper(freq="ME")).agg("sum")
+xlu_logweekly= log_xlu.groupby(pd.Grouper(freq="W-MON")).agg("sum")
+xlp_logweekly= log_xlp.groupby(pd.Grouper(freq="W-MON")).agg("sum")
+xlu_logyearly= log_xlu.groupby(pd.Grouper(freq="YE")).agg("sum")
+xlp_logyearly= log_xlp.groupby(pd.Grouper(freq="YE")).agg("sum")
+#+end_src
+
+#+RESULTS:
+
+#+begin_src jupyter-python :exports both :session MiniProject2
+pd.concat([xlu_logweekly,xlp_logweekly],axis=1).plot(kind="hist",subplots=True,bins=80)
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: array([<Axes: ylabel='Frequency'>, <Axes: ylabel='Frequency'>],
+:       dtype=object)
+[[file:./.ob-jupyter/5891e1d6591772f73e2c0ac7c890a06670f803dc.png]]
+:END:
+
+#+begin_src jupyter-python :exports both :session MiniProject2
+# xlp["Staples Returns"]["1990-01-01":].plot(kind="hist",
+#                                            bins=50,
+#                                            title="Consumer Staples logdaily Returns",
+#                                            xlabel="Log Returns")
+plt.title("Distribution of logdaily Returns ")
+plt.xlabel("")
+sns.histplot(xlp["Staples Returns"]["1990-01-01":])
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'Distribution of logdaily Returns '}, xlabel='Staples Returns', ylabel='Count'>
+[[file:./.ob-jupyter/1ccb76d969892f50d64cebe35b530fbe6a7e35b2.png]]
 :END:
 
 # Local Variables:
-# compile-command: "pandoc -s -o MiniProject1.ipynb MiniProject1.org -V header-includes='<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>'"
-# jupyter-executable: "~/code/erdos-qfinance-projects/.venv/bin/jupyter"
+# compile-command: "pandoc -s -o MiniProject2.ipynb MiniProject2.org -V header-includes='<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>'"
+# eval: (setq-local jupyter-executable (inheritenv (executable-find "jupyter")))
 # End:
