@@ -164,6 +164,7 @@ monthly_logs.plot(kind="hist",bins = 60,
 : <Axes: title={'center': 'Monthly log Returns'}, xlabel='Log Returns', ylabel='Frequency'>
 [[file:./.ob-jupyter/dba3aa8a5210f398694841ce08dadbf3d9e7bbc2.png]]
 :END:
+
 #+begin_src jupyter-python :exports both :session MiniProject2
 monthly_logs.skew()
 #+end_src
@@ -184,6 +185,7 @@ yearly_logs.plot(kind="hist",bins = 60,
 : <Axes: title={'center': 'log Yearly Returns'}, xlabel='Log Returns', ylabel='Frequency'>
 [[file:./.ob-jupyter/f8d4426c56599a2559867a4936d2eabc7d3b6861.png]]
 :END:
+
 #+begin_src jupyter-python :exports both :session MiniProject2
 yearly_logs.skew()
 #+end_src
@@ -328,6 +330,7 @@ np.log(ko["KO"]).plot(title="KO Logvalue: $10000 Invested",
 : <Axes: title={'center': 'KO Logvalue: $10000 Invested'}, xlabel='Date', ylabel='Logvalue'>
 [[file:./.ob-jupyter/371316feaf22f90b281a0bcaf61168e55bd7f208.png]]
 :END:
+
 From a visual inspection of the logvalue of an investment in KO, we see that the period between 1975 and 1982 shows promise for lognormal returns, based on intuition alone.
 #+begin_src jupyter-python :session MiniProject2
 s1,s2 = ("1975-04-01","1982-03-01")
