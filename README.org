@@ -21,7 +21,7 @@ Follow the instructions in https://docs.python.org/3/library/venv.html if your s
 
 If the output of =which python3= points to the virtual environment, you can install the packages needed for the notebooks:
 #+begin_src sh
-python3 -m pip install r requirements.txt
+python3 -m pip install -r requirements.txt
 #+end_src
 With the proper python sourced and the requirements installed, you can now run the notebooks from the command line.
 * Nix+direnv
