@@ -311,14 +311,20 @@ shapiro(log_ko.groupby(pd.Grouper(freq="W-MON")).agg("sum"))
 #+begin_src jupyter-python :session MiniProject2
 p1 = np.log(1+ 0.20*sp500["SP500 Returns"] + 0.40*ko["KO Returns"] + 0.40*xlp["Staples Returns"])
 p1[start:end].plot(kind="hist",bins=80)
-shapiro(p1[start:end])
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: ShapiroResult(statistic=np.float64(0.9630799036343107), pvalue=np.float64(6.119166277975437e-26))
+: <Axes: ylabel='Frequency'>
 [[file:./.ob-jupyter/e33af25d1903a9a9962a25d0db1fc8dcadff4310.png]]
 :END:
+
+#+begin_src jupyter-python :session MiniProject2
+shapiro(p1[start:end])
+#+end_src
+
+#+RESULTS:
+: ShapiroResult(statistic=np.float64(0.9630799036343107), pvalue=np.float64(6.119166277975437e-26))
 
 #+begin_src jupyter-python :session MiniProject2
 np.log(ko["KO"]).plot(title="KO Logvalue: $10000 Invested",
@@ -332,6 +338,7 @@ np.log(ko["KO"]).plot(title="KO Logvalue: $10000 Invested",
 :END:
 
 From a visual inspection of the logvalue of an investment in KO, we see that the period between 1975 and 1982 shows promise for lognormal returns, based on intuition alone.
+The reason is the log price seems to dither around the same price, indicating a more normal random choice of up-down movements on the day.
 #+begin_src jupyter-python :session MiniProject2
 s1,s2 = ("1975-04-01","1982-03-01")
 
