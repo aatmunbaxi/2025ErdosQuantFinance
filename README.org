@@ -5,8 +5,7 @@
 
 
 
-* Deplowing with python virtual environment (recommended)
-Each subdirectory depends on a =./.venv= directory for the virtual environment at the top level.
+* Deploying with python virtual environment (recommended)
 Run the following commands to get it up and running:
 #+begin_src sh
 git clone https://github.com/aatmunbaxi/2025ErdosQuantFinance
