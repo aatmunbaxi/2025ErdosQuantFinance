@@ -2,6 +2,29 @@
 #+author: Aatmun Baxi
 #+language: en
 
+
+
+
+* Deplowing with python virtual environment (recommended)
+Each subdirectory depends on a =./.venv= directory for the virtual environment at the top level.
+Run the following commands to get it up and running:
+#+begin_src sh
+git clone https://github.com/aatmunbaxi/2025ErdosQuantFinance
+cd 2025ErdosQuantFinance
+python3 -m venv .venv
+source .venv/bin/activate
+#+end_src
+
+The above instructions assume =bash= or =zsh= as your shell.
+Fish users should source =activate.fish=.
+Follow the instructions in https://docs.python.org/3/library/venv.html if your shell is not one of these.
+
+If the output of =which python3= points to the virtual environment, you can install the packages needed for the notebooks:
+#+begin_src sh
+python3 -m pip install r requirements.txt
+#+end_src
+With the proper python sourced and the requirements installed, you can now run the notebooks from the command line.
+* Nix+direnv
 The dependencies of this project can be built on system with the nix package manager with flakes enabled.
 Install =direnv= and run =direnv allow= in each directory containing =.envrc= to install and load the dependencies.
 The programs and python packages listed in =flake.nix= will be installed and available.
