@@ -74,7 +74,7 @@ def bs_put(S0, K, sigma, t=1, r=0):
 
 Let \(P_c, P_p\) denote the price of a call (respectively, put) option.
 *  \(\frac{\partial P_{c}}{\partial T}\), \(T\) time to expiration
-#+begin_src jupyter-python :session MiniProject3
+#+begin_src jupyter-python :session MiniProject3 :exports both
 S0 = 100
 K = 110
 sigma = .3
@@ -96,7 +96,7 @@ plt.show()
 
 
 *  \(\frac{\partial P_{c}}{\partial S(0)}\)
-#+begin_src jupyter-python :session MiniProject3
+#+begin_src jupyter-python :session MiniProject3 :exports both
 S0 = 100
 K = 110
 sigma = .3
@@ -117,7 +117,7 @@ plt.show()
 #+RESULTS:
 [[file:./.ob-jupyter/3efa858c449aa4be89a549f4a4fbb08bfd1f565a.png]]
 *  \(\frac{\partial P_p}{\partial T}\), \(T\) time to expiration
-#+begin_src jupyter-python :session MiniProject3
+#+begin_src jupyter-python :session MiniProject3 :exports both
 S0 = 100
 K = 110
 sigma = .3
@@ -140,8 +140,7 @@ plt.show()
 
 
 * \(\frac{\partial P_{p}}{\partial S(0)}\)
-
-#+begin_src jupyter-python :session MiniProject3
+#+begin_src jupyter-python :session MiniProject3 :exports both
 S0 = 100
 K = 110
 sigma = .3
@@ -213,5 +212,5 @@ Notably, the premium is still positive despite the spot being lower than the str
 Since we are assuming a constant time (1 year) to expiry, there is still time for the price of the underlying to make its way back above the strike, so we should *not* expect the price of the put to be zero.
 
 # Local Variables:
-# compile-command: "pandoc -s -o MiniProject2.ipynb MiniProject2.org -V header-includes='<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>'"
+# compile-command: "pandoc -s -o MiniProject3.ipynb MiniProject3.org -V header-includes='<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>'"
 # End
