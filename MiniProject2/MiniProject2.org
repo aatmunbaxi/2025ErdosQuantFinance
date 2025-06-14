@@ -199,20 +199,20 @@ So far, our tests for normality has been heuristic in nature.
 There are formal tests for normality such as she Shapiro-Wilk test, which we can employ.
 Below is the resulting \(p\) values extracted from the test, where the null hypothesis is that the data are normally distributed.
 #+begin_src jupyter-python :exports both :session MiniProject2
-from scipy.stats import shapiro
+from scipy.stats import shapiro, probplot, anderson
+
 names = ["Logdaily", "Logweekly","Logmonthly","Logyearly"]
 vars = [log_returns,weekly_logs,monthly_logs,yearly_logs]
 results = {x[0]: float(shapiro(x[1])[1]) for x in zip(names,vars)}
-print(f"Shapiro-Wilk p-values:\n {results}")
+for res in results:
+    print(f"Shapiro-Wilk {res} return p-value: {results[res]}")
 #+end_src
 
 #+RESULTS:
-: Shapiro-Wilk p-values:
-:  {'Logdaily': 3.818543836005726e-93, 'Logweekly': 1.178035812533499e-52, 'Logmonthly': 1.2008592564652523e-28, 'Logyearly': 0.00021204832741650683}
-: /nix/store/8f9zfpbmybfl09aq4a9nzp8a9gwgqjbf-python3.12-scipy-1.15.3/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:586: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 35112.
-:   res = hypotest_fun_out(*samples, **kwds)
-: /nix/store/8f9zfpbmybfl09aq4a9nzp8a9gwgqjbf-python3.12-scipy-1.15.3/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:586: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 7316.
-:   res = hypotest_fun_out(*samples, **kwds)
+: Shapiro-Wilk Logdaily return p-value: 3.818543836005726e-93
+: Shapiro-Wilk Logweekly return p-value: 1.178035812534928e-52
+: Shapiro-Wilk Logmonthly return p-value: 1.2008592564647532e-28
+: Shapiro-Wilk Logyearly return p-value: 0.00021204832741660105
 
 In every performance of the Shapiro-Wilk test, the resulting \(p\) value is decidedly below \(0.05\), so in every case we reject the null hypothesis that the data are normally distributed.
 
@@ -229,6 +229,10 @@ print(f"p-values; skewness-kurtosis test:\n{normaltest(pd.concat([log_returns, w
 
 In this test, too, there is sufficient evidence to reject the hypothesis that the data are normaly distributed at all sampled time scales.
 
+We can also apply the Anderson test to each series of returns
+#+begin_src jupyter-python :exports both :session MiniProject2
+
+#+end_src
 * Testing Particular Bull Markets
 Because of the pervasive observation that stock returns are negatively skewed, we might have better luck finding evidence of normality of stock returns during bull markets—periods where the market trends upward without a 20% drop from its high.
 Bull markets are usually marked by extended periods of lower volatility, and volatility tends to beget volatility, causing bouts out-of-sample returns that could disrupt a normal distribution.
