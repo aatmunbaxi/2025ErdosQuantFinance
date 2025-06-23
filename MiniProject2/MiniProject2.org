@@ -220,7 +220,7 @@ Since we are interested in stocks only, we will work within the confines of equi
 
 We hypothesize that a diverse portfolio is the wrong way to mine logreturns that might be normal.
 Instead, we look at a particular individual stock in the consumer staple sector, Coca-Cola (KO).
-#+begin_src jupyter-python :session MiniProject2 :exports code :results none
+#+begin_src jupyter-python :session MiniProject2 :exports both :results none
 ko = csv_to_series("./KO.csv")
 log_ko = np.log(1+ko["KO Returns"])
 #+end_src
