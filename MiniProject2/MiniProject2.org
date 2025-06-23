@@ -45,7 +45,7 @@ log_returns = np.log((1+sp500["SP500 Returns"]).dropna())
 
 #+RESULTS:
 
-* Heuristic Checks for Lognormality
+* Heuristic Checks for Normality
 As a preliminary look, we can look at the distribution of daily returns.
 #+begin_src jupyter-python :exports both :session MiniProject2
 log_returns.plot(kind="hist",
@@ -126,80 +126,12 @@ clamped.skew()
 
 The skewness does decrease in magnitude, but its value still indicates a distribution far from normal.
 It seems daily returns are too negatively skewed to recover a distribution that is normal.
-
-Instead, we can coarsen our return periods to weekly, monthly, and yearly returns to see if they exhibit different behaviours.
-We should expect this to be an improvement on log-daily returns, since the reliability of stock returns tends to increase the longer the time period you look at.
-
-#+begin_src jupyter-python :exports both :session MiniProject2
-weekly_logs = log_returns.groupby(pd.Grouper(freq="W-MON")).agg("sum")
-weekly_logs.plot(kind="hist",bins = 60,
-                 title="Weekly log Returns",
-                 xlabel="Log Returns")
-#+end_src
-
-#+RESULTS:
-:RESULTS:
-: <Axes: title={'center': 'Weekly log Returns'}, xlabel='Log Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/535d83082e2378e20fc386b198cca1dcf5268ee2.png]]
-:END:
-
-#+begin_src jupyter-python :exports both :session MiniProject2
-weekly_logs.skew()
-#+end_src
-
-#+RESULTS:
-: np.float64(-0.8428780928389739)
-
-On the collection of all the data, the skewness of the weekly log returns is less skewed than the daily log returns, but still skewed in the same direction.
-We can coarsen the view to further to monthly returns.
-#+begin_src jupyter-python :exports both :session MiniProject2
-monthly_logs = log_returns.groupby(pd.Grouper(freq="ME")).agg("sum")
-monthly_logs.plot(kind="hist",bins = 60,
-                 title="Monthly log Returns",
-                 xlabel="Log Returns")
-#+end_src
-
-#+RESULTS:
-:RESULTS:
-: <Axes: title={'center': 'Monthly log Returns'}, xlabel='Log Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/dba3aa8a5210f398694841ce08dadbf3d9e7bbc2.png]]
-:END:
-
-#+begin_src jupyter-python :exports both :session MiniProject2
-monthly_logs.skew()
-#+end_src
-
-#+RESULTS:
-: np.float64(-0.5649387662902664)
-
-Even monthy returns are negatively skewed.
-#+begin_src jupyter-python :exports both :session MiniProject2
-yearly_logs = log_returns.groupby(pd.Grouper(freq="YE")).agg("sum")
-yearly_logs.plot(kind="hist",bins = 60,
-                 title="log Yearly Returns",
-                 xlabel="Log Returns")
-#+end_src
-
-#+RESULTS:
-:RESULTS:
-: <Axes: title={'center': 'log Yearly Returns'}, xlabel='Log Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/f8d4426c56599a2559867a4936d2eabc7d3b6861.png]]
-:END:
-
-#+begin_src jupyter-python :exports both :session MiniProject2
-yearly_logs.skew()
-#+end_src
-
-#+RESULTS:
-: np.float64(-0.9182998475458627)
-
-Even at time scales such as a year, returns of a diverse portfolio of US stocks shows little evidence of being normal on visual tests.
 * Formal Tests for Normality
 So far, our tests for normality has been heuristic in nature.
 There are formal tests for normality such as she Shapiro-Wilk test, which we can employ.
 Below is the resulting \(p\) values extracted from the test, where the null hypothesis is that the data are normally distributed.
 #+begin_src jupyter-python :exports both :session MiniProject2
-from scipy.stats import shapiro, probplot, anderson
+from scipy.stats import shapiro, normaltest
 
 names = ["Logdaily", "Logweekly","Logmonthly","Logyearly"]
 vars = [log_returns,weekly_logs,monthly_logs,yearly_logs]
@@ -209,17 +141,14 @@ for res in results:
 #+end_src
 
 #+RESULTS:
-: Shapiro-Wilk Logdaily return p-value: 3.818543836005726e-93
-: Shapiro-Wilk Logweekly return p-value: 1.178035812534928e-52
-: Shapiro-Wilk Logmonthly return p-value: 1.2008592564647532e-28
-: Shapiro-Wilk Logyearly return p-value: 0.00021204832741660105
+: Shapiro-Wilk p-values:
+:  {'Logdaily': 3.818543836005726e-93, 'Logweekly': 1.178035812533499e-52, 'Logmonthly': 1.2008592564652523e-28, 'Logyearly': 0.00021204832741650683}
 
 In every performance of the Shapiro-Wilk test, the resulting \(p\) value is decidedly below \(0.05\), so in every case we reject the null hypothesis that the data are normally distributed.
 
 On the other hand, the =normaltest= from =scipy.stats= uses skewness and kurtosis to compare against a normal distribtution.
 
 #+begin_src jupyter-python :exports both :session MiniProject2
-from scipy.stats import normaltest
 print(f"p-values; skewness-kurtosis test:\n{normaltest(pd.concat([log_returns, weekly_logs, monthly_logs,yearly_logs],axis=1),nan_policy='omit',axis=0).pvalue}")
 #+end_src
 
@@ -234,14 +163,11 @@ We can also apply the Anderson test to each series of returns
 
 #+end_src
 * Testing Particular Bull Markets
-Because of the pervasive observation that stock returns are negatively skewed, we might have better luck finding evidence of normality of stock returns during bull markets—periods where the market trends upward without a 20% drop from its high.
-Bull markets are usually marked by extended periods of lower volatility, and volatility tends to beget volatility, causing bouts out-of-sample returns that could disrupt a normal distribution.
-
+We can selectively pick periods of time where volatility is lower, which typically happens during bull markets
 We first examine the longest bull market in US history: the period between December 1987 and March 2000
 #+begin_src jupyter-python :exports both :session MiniProject2
 start, end = ("1987-12-01","2000-03-01")
 log_returns[start:end].plot(kind="hist",bins=50,xlabel="Log Daily Returns")
-
 #+end_src
 
 #+RESULTS:
@@ -253,14 +179,16 @@ log_returns[start:end].plot(kind="hist",bins=50,xlabel="Log Daily Returns")
 Looking at the distribution of daily returns, we can already see a thinning of the tails, though the daily returns still appear negatively distributed.
 We investigate the \(p\) value of the formal Shapiro-Wilk test on the monthly returns during this bull market.
 #+begin_src jupyter-python :exports both :session MiniProject2
-print(f"p = {shapiro(monthly_logs[start:end])[1]}")
+print(f"p = {normaltest(monthly_logs[start:end])[1]}")
 #+end_src
 
 #+RESULTS:
-: p = 0.08925705296209206
+: p = 0.06689875527159461
 
 With a tolerance of \(p = 0.05\), there is not sufficient evidence to reject the null hypothesis that the data is normally distributed.
-Thus, there is possible evidence of the log monthly returns of the S&P 500 being normally distributed during the 1987-2000 bull market.
+
+We will see later why this is an impressive result.
+It is quite difficult to find periods of time where the log returns show any evidence at all of being normally distributed, and \(3+13\ast 12 = 159\) logmonthly observations in this period would normally be enough to provide evidence against normality, but this particular bull market seems to show promise.
 
 Let us investigate the second longest bull market spanning from March 2009 to February 2020.
 #+begin_src jupyter-python :exports both :session MiniProject2
@@ -277,58 +205,26 @@ log_returns[start:end].plot(kind="hist",bins=50,xlabel="Log Daily Returns",
 
 This time, the left tail is much fatter than the previous bull market under examination.
 #+begin_src jupyter-python :exports both :session MiniProject2
-print(f"p = {shapiro(monthly_logs[start:end])[1]}")
+print(f"p = {normaltest(monthly_logs[start:end])[1]}")
 #+end_src
 
 #+RESULTS:
-: p = 0.0011705343595598972
+: p = 0.007993736572718346
 
-As the visual inspection suggested, we cannot conclude normality of the monthly returns in this period.
-
-
-** Conclusion
-We can conclude that it is very difficult to find periods of time and scales of time where stock returns are normally distributed, even when volatility is controlled by using a diversified portfolio.
-This suggests that the assumption of normal stock returns used in the Black-Scholes model does not reflect reality.
-It still serves the useful purpose of helping extract closed-form equation
-* A "Portfolio" with Normal Return
-For some commentary, we should not expect it to be easy to construct a portfolio of stocks (i.e. *equities*) with lognormal returns over a significant period of time.
+This bull market instead does show signs of difference from normality.
+* A Particular Stock: KO
+We should not expect it to be easy to construct a portfolio of stocks (i.e. *equities*) with lognormal returns over a significant period of time.
 Equities are inherently riskier than other financial assets like bonds, and show fatter tails in distributions of historical returns on virtually all time scales.
 One typically reduces the volatility of a portfolio of stocks by allocating to "safer" kinds of stocks (e.g. consumer staples, utilities) or by moving away from stocks altogether and using bonds.
 Since we are interested in stocks only, we will work within the confines of equities.
 
 We hypothesize that a diverse portfolio is the wrong way to mine logreturns that might be normal.
 Instead, we look at a particular individual stock in the consumer staple sector, Coca-Cola (KO).
-#+begin_src jupyter-python :session MiniProject2
+#+begin_src jupyter-python :session MiniProject2 :exports code :results none
 ko = csv_to_series("./KO.csv")
 log_ko = np.log(1+ko["KO Returns"])
 #+end_src
 
-#+RESULTS:
-
-#+begin_src jupyter-python :session MiniProject2
-shapiro(log_ko.groupby(pd.Grouper(freq="W-MON")).agg("sum"))
-#+end_src
-
-#+RESULTS:
-: ShapiroResult(statistic=np.float64(0.9619671474112037), pvalue=np.float64(1.1627666805933354e-28))
-
-#+begin_src jupyter-python :session MiniProject2
-p1 = np.log(1+ 0.20*sp500["SP500 Returns"] + 0.40*ko["KO Returns"] + 0.40*xlp["Staples Returns"])
-p1[start:end].plot(kind="hist",bins=80)
-#+end_src
-
-#+RESULTS:
-:RESULTS:
-: <Axes: ylabel='Frequency'>
-[[file:./.ob-jupyter/e33af25d1903a9a9962a25d0db1fc8dcadff4310.png]]
-:END:
-
-#+begin_src jupyter-python :session MiniProject2
-shapiro(p1[start:end])
-#+end_src
-
-#+RESULTS:
-: ShapiroResult(statistic=np.float64(0.9630799036343107), pvalue=np.float64(6.119166277975437e-26))
 
 #+begin_src jupyter-python :session MiniProject2
 np.log(ko["KO"]).plot(title="KO Logvalue: $10000 Invested",
@@ -341,20 +237,20 @@ np.log(ko["KO"]).plot(title="KO Logvalue: $10000 Invested",
 [[file:./.ob-jupyter/371316feaf22f90b281a0bcaf61168e55bd7f208.png]]
 :END:
 
-From a visual inspection of the logvalue of an investment in KO, we see that the period between 1975 and 1982 shows promise for lognormal returns, based on intuition alone.
+From a visual inspection of the logvalue of an investment in KO, we see that the period between 1995 and 1996 shows promise for lognormal returns, based on intuition alone.
 The reason is the log price seems to dither around the same price, indicating a more normal random choice of up-down movements on the day.
+We should want more zero-mean log returns to have any hope of finding such a period with normally distributed returns.
 #+begin_src jupyter-python :session MiniProject2
-s1,s2 = ("1975-04-01","1982-03-01")
+s1,s2 = ("1995-04-01","1996-04-01")
+from scipy.stats import probplot
 
-np.log(ko["KO"][s1:s2]).plot(title="KO Logvalue: $10000 Invested",
-                      ylabel = "Logvalue")
+probplot(log_ko[s1:s2],plot=plt)
+plt.title(f"KO logdaily returns: {s1}—{s2}")
+plt.show()
 #+end_src
 
 #+RESULTS:
-:RESULTS:
-: <Axes: title={'center': 'KO Logvalue: $10000 Invested'}, xlabel='Date', ylabel='Logvalue'>
-[[file:./.ob-jupyter/b5a697f2ea154767aca5847c8a0a705c41617c59.png]]
-:END:
+[[file:./.ob-jupyter/2947d8f411db19bfd47d031483b3c91799579d2d.png]]
 
 #+begin_src jupyter-python :session MiniProject2
 log_ko[s1:s2].plot(kind="hist",bins=80)
@@ -363,53 +259,113 @@ log_ko[s1:s2].plot(kind="hist",bins=80)
 #+RESULTS:
 :RESULTS:
 : <Axes: ylabel='Frequency'>
-[[file:./.ob-jupyter/6db8dbe303bbefc9a1c7564379f0c3ba6aaad7e5.png]]
+[[file:./.ob-jupyter/0a60e675592a04853c1a22e456364522a824c0db.png]]
 :END:
 
 Apart from the distribution of logdaily returns looking more favorable than our other assets, we can check the skewness and kurtosis:
 #+begin_src jupyter-python :session MiniProject2
-print(f"KO Skew: {log_ko[s1:s2].skew()}\nKO Kurtosis: {log_ko[s1:s2].kurtosis()}")
+print(f"KO logreturns 04/1995-04/1996 p-value: {normaltest(log_ko[s1:s2])[1]}")
 #+end_src
 
 #+RESULTS:
-: KO Skew: 0.07501193801330085
-: KO Kurtosis: 2.092529284602919
+: KO logreturns 04/1995-04/1996 p-value: 0.5050793770779156
 
-These metrics are the closest to normal distribution so far.
-A portfolio of 100% KO might yield logreturns resembling a normal distribution from the time period of 1975-04-01 to 1982-03-01.
-Over longer periods of time, it is extremely difficult to find a stock with lognormal returns, due to the long term observation that stocks tend to go up.
+During the period of 04/1995 to 04/1996, we observe there is not enough evidence to reject the null hypothesis that the data is not normally distributed.
 
+* Normality as a Function of Length of Time Period
+In the previous section we found a yearly period where a test of normaliy on the logdaily returns of KO did not show enough evidence to reject the null hypothesis of normal distributivity.
+Here we investigate the relationship of this \(p\) value with the period of time we look over.
 
-To counterbalance any indiosyncratic movement specific to the consumer staple sector which KO operates in, we add a consumer discretionary option to our portfolio with MCD.
-#+begin_src jupyter-python :session MiniProject2
-mcd = csv_to_series("./MCD.csv")
-log_mcd = np.log(1+mcd["MCD Returns"])
+We will test this by testing normality of logdaily returns on the S&P 500 for rolling monthly, semiannual, yearly, 2-yearly, and 5-yearly trading periods.
+In each of these rolling periods, we will test for normality, and see in what percentage of these rolling periods we can reject the null hypothesis.
+#+begin_src jupyter-python :session MiniProject2 :results none :exports both
+periods = [20,6*20, 252,2*252,5*252]
+period_names = ["Monthly","Semiannual","Yearly","2-year","5-year"]
+
+percent_rejected = []
+for x in periods:
+    rolled_ps = log_returns.rolling(x).apply(lambda x:normaltest(x)[1]).dropna()
+    percent_normal = 100* len(rolled_ps[rolled_ps< 0.05]) / len(rolled_ps)
+    percent_rejected.append(percent_normal)
+
 #+end_src
 
-#+RESULTS:
-
-#+begin_src jupyter-python :session MiniProject2
-w1 = 0.8
-w2 = 1-w1
-p1 = np.log(1+ w1*ko["KO Returns"] + w2*mcd["MCD Returns"])
-p1[s1:s2].plot(kind="hist",bins=80)
+#+begin_src jupyter-python :session MiniProject2 :results value :exports both
+plt.bar(x=period_names,height=percent_rejected)
+plt.title("% Rejection of Normality. Rolling Periods of Logdaily S&P500 Returns")
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: <Axes: ylabel='Frequency'>
-[[file:./.ob-jupyter/e11c500116c881ecff19d4f509772fe6e9982d0e.png]]
+: Text(0.5, 1.0, '% Rejection of Normality. Rolling Periods of Logdaily S&P500 Returns')
+[[file:./.ob-jupyter/338c0f56d270b77fd4cf8264cdcd27312a958fea.png]]
+:END:
+The graph gives an interpretation as follows: *given any particular yearly period of logdaily S&P500 returns, there is a ~80% chance that this period shows enough evidence to reject the hypothesis that the data are normally distributed.*
+In other words, only 20% of rolling yearly periods of logdaily returns show potential to be normally distributed.
+Chances of finding potential for normality increase as your time window shrinks.
+
+
+We can run the same examination on KO to see how they differ, if at all.
+#+begin_src jupyter-python :session MiniProject2 :results value :exports both
+periods = [20,6*20, 252,2*252,5*252]
+period_names = ["Monthly","Semiannual","Yearly","2-year","5-year"]
+ko_percent_rejected = []
+for x in periods:
+    rolled_ps = log_ko.rolling(x).apply(lambda x:normaltest(x)[1]).dropna()
+    ko_percent_normal = 100* len(rolled_ps[rolled_ps< 0.05]) / len(rolled_ps)
+    ko_percent_rejected.append(ko_percent_normal)
+
+plt.bar(x=period_names,height=ko_percent_rejected)
+plt.title("% Rejection of Normality. Rolling Periods of Logdaily KO Returns")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: Text(0.5, 1.0, '% Rejection of Normality. Rolling Periods of Logdaily KO Returns')
+[[file:./.ob-jupyter/cc67c821fd8bac5639b96374a79c05aebe4fa13b.png]]
 :END:
 
-Even with the addition of a single stock to our portfolio at 20% weight, our distribution gets a big hit of negative skewness, pushing it away from normality.
+And we can run it on a few more low beta stocks/indexes to see a trend:
+#+begin_src jupyter-python :session MiniProject2 :results none :exports both
+log_gis = np.log(1+csv_to_series("./GIS.csv")["GIS Returns"]).dropna()
+log_xlu = np.log(1+csv_to_series("./XLU.csv")["XLU Returns"]).dropna()
+log_mcd = np.log(1+csv_to_series("./MCD.csv")["MCD Returns"]).dropna()
 
-* An Explanation of more diversity=less normal
-As a function of diversification, negative skewness increases in magnitude.
-This has an easy empirical explanation: holding more stocks increases the reliability of consistent /positive/ return, pushing the distribution of returns away from normality.
-This also explains why distributions of logreturns were less normal the more we coarsened our time view.
-Generally, it is more likely for portfolio's returns to be positive over the course of a year rather than the course of a day.
+def reject_normality(ticker, returns):
+    periods = [20,6*20, 252,2*252,5*252]
+    period_names = ["Monthly","Semiannual","Yearly","2-year","5-year"]
+    percent_rejected = []
+    for x in periods:
+        rolled_ps = returns.rolling(x).apply(lambda x:normaltest(x)[1]).dropna()
+        percent_normal = 100* len(rolled_ps[rolled_ps< 0.05]) / len(rolled_ps)
+        percent_rejected.append(percent_normal)
 
-Finding normally distributed returns in stocks is essentially an exercise in arbitrary data mining, and the pattern fails more often than it succeeds.
+
+    plt.bar(x=period_names,height=percent_rejected)
+    plt.title(f"% Rejection of Normality. Rolling Periods of Logdaily {ticker} Returns")
+    plt.show()
+#+end_src
+
+
+#+begin_src jupyter-python :session MiniProject2 :results value :exports both
+reject_normality("XLU",log_xlu)
+reject_normality("GIS",log_gis)
+reject_normality("MCD",log_mcd)
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+[[file:./.ob-jupyter/0184cdb89903d2e8eb5b146501d67008af58a377.png]]
+[[file:./.ob-jupyter/0e08ec840e57ae9c03610711f65e0f5b2d5a0d1f.png]]
+[[file:./.ob-jupyter/3b5331cd3c6bdf44a8e94c8f3d2c1711d0e585d4.png]]
+:END:
+
+The graphs show a consistent trend that  *longer periods of logdaily returns display less liklihood of being normally distributed.*
+Thus, finding periods of normally distributed returns has less to do with the idiosyncrasies of each stock/index, and more to do with how the test actually works.
+In particular, we can reasonably guess that the lack of evidence of normality in the shorter time windows is very likely due to the lack of data points, and not an actual statement about the intrinsic data itself.
+
+* Conclusion
+We can conclude that finding normally distributed returns in stocks is *essentially an exercise in arbitrary data mining*, and the pattern fails far more often than it succeeds.
 Though, this is the point of this exercise: the assumption of normal stock returns in various financial models such as Black-Scholes is not borne out in reality, and this illustrates that plainly.
 The essence of assuming lognormal returns is simply a convenience to find closed form solutions to option prices, and models incorporating assumptions that reflect reality are much more difficult to work with.
 
