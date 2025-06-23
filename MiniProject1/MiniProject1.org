@@ -36,7 +36,6 @@ Our "low risk" portfolio will consist of 90% global stocks at *current* market c
 
 The choice of using current market cap weights for the US and ex-US geographies is to make the portfolio comparable to the high risk portfolio.
 
-
 * Risk Factors as Sources of Increased Risk
 In Capital Asset Pricing Model (CAPM), the "low" risk portfolio would be nearly the riskiest portfolio one can come up with, when only compensated risks are accounted for.
 A compensated risk is a source of risk that an investor can expect to be compensated for, while an investor taking on uncompensated risk cannot expect to increase their returns for doing so.
@@ -62,7 +61,6 @@ The risk factors in this model are
 It should be noted that the model improves on the CAPM /empirically/ in how it explains returns, but past returns do not predict the future.
 However, there are good reasons to believe thse addition risk factors should be compensated ones.
 
-
 * The High Risk Portfolio
 The three factor model predicts that a portfolio with higher exposure to small cap companies and value companies can give returns higher than the market portfolio.
 This is the basis for our high risk portfolio.
@@ -76,13 +74,13 @@ In our high risk portfolio, these would be halved to \(28\% \) and \(17\%\) for 
 
 The choice of \(50\% \) dedicated to small cap value in each geography is somewhat arbitrary, and is likely considered a very aggressive tilt to the size and value factors.
 Our high risk portfolio is then
-| Asset                 |  % |
-|-----------------------+----|
-| Total US Stock        | 28 |
-| US Small Cap Value    | 27 |
-| Total ex-US Stock     | 18 |
-| ex-US Small Cap Value | 17 |
-| 25+ STRIPS            | 10 |
+| Asset                    |  % |
+|--------------------------+----|
+| Total US Stock           | 28 |
+| US Small Cap Value       | 27 |
+| Total ex-US Stock        | 18 |
+| ex-US Small Cap Value    | 17 |
+| 25+ Year Treasury STRIPS | 10 |
 
 * Risk of Small Cap Value
 Though we have used the three factor model to incorporate new sources of risk into our high risk portfolio, it turns out that we have incorporated assets that have higher risk even in traditional metrics of risk such as volatitily.
@@ -116,7 +114,7 @@ us_exus.plot(rot=70)
 
 
 #+begin_src jupyter-python :session MiniProject1 :exports both
-day_returns = (us_exus.shift(-1) -us_exus) / us_exus
+day_returns = (us_exus -us_exus.shift(1)) / us_exus.shift(1)
 day_returns.describe()
 #+end_src
 
@@ -253,16 +251,187 @@ We can also visually inspect a histogram of daily returns and see how they are d
 The US small cap value asset has fatter tails than the total market counterpart in the same geography, as demonstrated by the higher volatility earlier.
 However, both geographies see a higher mean in the small cap value class.
 This is good, as it indicates that the small cap value risk has historically been compensated.
+
+* Tracking Error as Behavioral Risk
+Concentration of assets in some that are more volatile than others does not necessarily make a portfolio more risky.
+We saw in the previous section that the ex-US small cap value actually has slightly /lower/ volatlility than the total market counterpart.
+We argue that the portfolio with concentration in small cap value is riskier due to tracking error: the difference in performance of certain assets compared to a benchmark.
+
+When one holds the market portfolio, one is content that the market is accurately pricing all information in and producing the average of all performance.
+Our second portfolio deviates from the market portfolio, opening an investor to certain psychological risks associated with tracking error (i.e. active risk).
+If the held portfolio is underperforming the market, the investor might get uncomfortable sticking with the same portfolio, and rebalance away from it, preventing actualization of the risk premia in the 3F model.
+Let us demonstrate this risk exists.
+
+
+** Small Cap Value vs. Total Market Tracking Error
+Given an asset's returns \(A_t\) and a benchmark's returns \(B_t\) over a time period \([0,T]\), the tracking error of asset \(A\) over the time period is computed as
+\[\operatorname{std}(A_T - B_{T}).\]
+We will compare the SCV assets to their same geography's total market assets as a benchmark.
+
+#+begin_src jupyter-python :session MiniProject1 :results value :exports both
+yearly_rets = (1+day_returns).groupby(pd.Grouper(freq="YE")).agg("prod")-1
+us_tracking_error = (yearly_rets["DFSVX"]-yearly_rets["VTISIM"]).dropna().describe()["std"]
+print(f"US Small Value Tracking error: {100*us_tracking_error:.2f}%")
+#+end_src
+
+#+RESULTS:
+: US Small Value Tracking error: 14.30%
+
+#+begin_src jupyter-python :session MiniProject1 :results value :exports both
+(100*yearly_rets).describe()
+#+end_src
+
+#+RESULTS:
+#+begin_export html
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>DFSVX</th>
+      <th>VTISIM</th>
+      <th>DISVX</th>
+      <th>VXUSSIM</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>32.000000</td>
+      <td>32.000000</td>
+      <td>32.000000</td>
+      <td>32.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>12.173343</td>
+      <td>11.664464</td>
+      <td>9.175259</td>
+      <td>7.047925</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>20.188332</td>
+      <td>17.939760</td>
+      <td>20.957356</td>
+      <td>18.413280</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>-36.785480</td>
+      <td>-36.948992</td>
+      <td>-41.678019</td>
+      <td>-43.999425</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>-4.462004</td>
+      <td>0.303825</td>
+      <td>-0.772098</td>
+      <td>-4.099137</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>11.311708</td>
+      <td>16.043307</td>
+      <td>6.839869</td>
+      <td>11.342716</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>25.981564</td>
+      <td>24.430837</td>
+      <td>21.569756</td>
+      <td>16.446349</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>59.403412</td>
+      <td>35.975306</td>
+      <td>66.480767</td>
+      <td>40.591887</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+#+end_export
+
+#+begin_src jupyter-python :session MiniProject1 :results value :exports both
+exus_tracking_error = (yearly_rets["DISVX"]-yearly_rets["VXUSSIM"]).dropna().describe()["std"]
+print(f"US Small Value Tracking error: {100*exus_tracking_error:.2f}%")
+#+end_src
+
+#+RESULTS:
+: US Small Value Tracking error: 10.48%
+
+The annual returns of both SCV geographies show tracking error of >10% compared to their geography's total market portfolio, opening up a long term investor to active risk of underperformance of a benchmark.
+So long as the investor does not adjust their portfolio, the risks taken can still be compensated, but this is another way in which the second portfolio is riskier.
+
+
+** SCV Underperformance
+Along with tracking error, SCV has been demonstrated to show significant periods of the worst kind of tracking error: underperformance.
+This compounds the behavioral risk of concentrating more of an investor's capital into SCV, since performance chasing is an oft-observed phenomenon.
+We will compare rolling annual returns of the SCV to the total market portfolios in their geography to demonstrate this.
+
+#+begin_src jupyter-python :session MiniProject1 :results value :exports both
+scv_over_market = yearly_rets["DFSVX"]-yearly_rets["VTISIM"]
+scv_over_market.index = scv_over_market.index.year
+(100*scv_over_market).plot(kind="bar",
+                     ylabel="$\\Delta$ %",
+                     xlabel="Year",
+                     title="DFSVX over VTI Returns",
+                     rot=70)
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'DFSVX over VTI Returns'}, xlabel='Year', ylabel='$\\Delta$ %'>
+[[file:./.ob-jupyter/c01a9a9bda6212a8ec1c65b2aca8dccf17905eef.png]]
+:END:
+
+As one can see, US SCV sees multiyear periods of underperformance compared to a total market portfolio, particularly recently.
+#+begin_src jupyter-python :session MiniProject1 :results value :exports both
+ex_scv_over_market = yearly_rets["DFSVX"]-yearly_rets["VXUSSIM"]
+ex_scv_over_market.index = ex_scv_over_market.index.year
+(100*ex_scv_over_market).plot(kind="bar",
+                     ylabel="$\\Delta$ %",
+                     xlabel="Year",
+                     title="DISVX over VXUS Returns",
+                     rot=70)
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'DISVX over VXUS Returns'}, xlabel='Year', ylabel='$\\Delta$ %'>
+[[file:./.ob-jupyter/c5072b9684a324a81073c97e7abd52920d91f027.png]]
+:END:
+
+Ex-US SCV fares better, but a general pattern is observed that periods of annual SCV underperformance are usually catastrophic, producing very high annual tracking errors and risk of underperformance in any given annual period.
+
 * Comparison of Bond Choices
 #+begin_src jupyter-python :session MiniProject1 :exports code
 def csv_to_series(csv_path):
     s = pd.read_csv(csv_path)
     s["Date"] = pd.to_datetime(s["Date"])
     s.set_index("Date",inplace = True)
-    returns = (s.shift(-1)-s) / s
+    returns = (s-s.shift(1)) / s.shift(1)
     returns.columns = [ticker + " Returns" for ticker in s.columns]
     return pd.concat([s, returns],axis=1)
 #+end_src
+
 
 #+RESULTS:
 Let us demonstrate why the choice of zero coupon bonds in the higher risk portfolio is riskier via volatility.
@@ -302,20 +471,16 @@ pd.concat([100*yearly_zroz,
 #+RESULTS:
 :RESULTS:
 : <Axes: title={'center': 'Calendar year returns'}, xlabel='Year', ylabel='Return (%)'>
-[[file:./.ob-jupyter/91667761bbcc5567f89e27b09a75d5aff804c801.png]]
+[[file:./.ob-jupyter/fddccf118211cb3f0e801bfe2f5340a42f2d2692.png]]
 :END:
 
-
 Visually, the volatility difference is very stark.
-Historically, the zero coupon bonds have acted as "bonds++", increasing the magnitude of returns on intermediate-duration treasuries.
 The returns appear to agree in their direction, but differ strongly in magnitude, which is consistent with the interpretation of ultra-long duration bonds as a leveraged bond allocation.
-Those invested in bonds in the 80s likely have recurring ulcer issues.
+It appears that the zero coupon bonds have acted as "bonds++", increasing the magnitude of returns on intermediate-duration treasuries.
 
+Those invested in zero coupon bonds in the 80s likely have chronic ulcer issues.
 
-* A Backtest
-We can backtest our two portfolios to get an idea of how they would have performed  against each other, had our hypothetical investor invested in them for the tested period.
-
-
+* Volatility Analysis of Portfolios
 #+begin_src jupyter-python :session MiniProject1 :exports code
 inception = "1994-12-29"
 
@@ -329,12 +494,28 @@ zroz = csv_to_series("./ZROZ-returns.csv")[inception:]["ZROZ Returns"]
 
 #+RESULTS:
 We now create a return series for each of our defined portfolios
-#+begin_src jupyter-python :session MiniProject1 :exports code
+#+begin_src jupyter-python :session MiniProject1 :exports code :results none
 p1 = 0.55*vti + 0.35*vxus + 0.1*govt
 p2 = 0.28*vti + 0.27*dfsvx + 0.18*vxus + 0.17*disvx + 0.10*zroz
 #+end_src
 
+We have argued from a couple angles that the second portfolio is riskier than the first portfolio, but in the aggregate, we observe something interesting:
+#+begin_src jupyter-python :session MiniProject1 :results value :exports both
+p1sig = np.log(1+p1).describe()["std"]*np.sqrt(252)
+p2sig = np.log(1+p2).describe()["std"]*np.sqrt(252)
+print(f"Portfolio 1 Volatility: {p1sig:.3f}\nPortfolio 2 Volatility: {p2sig:.3f}")
+#+end_src
+
 #+RESULTS:
+: Portfolio 1 Volatility: 0.159
+: Portfolio 2 Volatility: 0.155
+
+In the end, adding all those volatile assets actually *lowered* the portfolio's overall volatility!
+This result should be surprising given concentration risk and the kinds of assets we added, but is it not so surprising from a diversification standpoint.
+We ended up concentrating more capital in assets that were more uncorrelated with each other, smoothing out the ride of returns.
+
+* A Backtest
+We can backtest our two portfolios to get an idea of how they would have performed  against each other, had our hypothetical investor invested in them for the tested period.
 
 #+begin_src jupyter-python :session MiniProject1 :exports both
 both = pd.concat([p1,p2],axis = 1).set_axis(["Portfolio 1 Returns", "Portfolio 2 Returns"],axis=1)
@@ -368,7 +549,7 @@ both.describe()
   <tbody>
     <tr>
       <th>count</th>
-      <td>7654.000000</td>
+      <td>7655.000000</td>
       <td>7651.000000</td>
     </tr>
     <tr>
@@ -378,7 +559,7 @@ both.describe()
     </tr>
     <tr>
       <th>std</th>
-      <td>0.010032</td>
+      <td>0.010031</td>
       <td>0.009731</td>
     </tr>
     <tr>
@@ -388,12 +569,12 @@ both.describe()
     </tr>
     <tr>
       <th>25%</th>
-      <td>-0.003903</td>
+      <td>-0.003901</td>
       <td>-0.003972</td>
     </tr>
     <tr>
       <th>50%</th>
-      <td>0.000676</td>
+      <td>0.000677</td>
       <td>0.000774</td>
     </tr>
     <tr>
@@ -414,30 +595,20 @@ both.describe()
 
 We inspect the distribution of returns on each of the portfolios.
 #+begin_src jupyter-python :session MiniProject1 :exports both
-(((1+both).groupby(pd.Grouper(freq="ME")).agg("prod")-1)*100).plot(kind="hist",
-                                                             bins = 50,
-                                                     subplots=True,
-                                                     title = "Distribution of Monthly Returns (%)",
-                                                     xlabel = "Monthly Return (%)")
+(100*both).plot(kind="hist",
+                bins = 80,
+                subplots=True,
+                title = "Distribution of Monthly Returns (%)",
+                xlabel = "Daily Return (%)")
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: array([<Axes: xlabel='Monthly Return (%)', ylabel='Frequency'>,
-:        <Axes: xlabel='Monthly Return (%)', ylabel='Frequency'>],
+: array([<Axes: xlabel='Daily Return (%)', ylabel='Frequency'>,
+:        <Axes: xlabel='Daily Return (%)', ylabel='Frequency'>],
 :       dtype=object)
-[[file:./.ob-jupyter/4a9ceec9ce75074a3f50fdea8e7f11adcbdc8f4f.png]]
+[[file:./.ob-jupyter/3fb9a3dd1cc8fd95d71b10526d7b0d26c82cbbc5.png]]
 :END:
-
-Both distributions visually appear to exhibit negative skewness, in line with the high concentration of equities and the risk of sudden, rapid unrealized losses that they carry.
-#+begin_src jupyter-python :exports both :session MiniProject1
-both.skew(axis=0)
-#+end_src
-
-#+RESULTS:
-: Portfolio 1 Returns   -0.240736
-: Portfolio 2 Returns   -0.342016
-: dtype: float64
 
 Finally, we backtest both portfolios with a starting value of of $1000 invested on 1994-12-28.
 
@@ -448,11 +619,31 @@ Finally, we backtest both portfolios with a starting value of of $1000 invested 
 #+RESULTS:
 :RESULTS:
 : <Axes: title={'center': 'Growth of $1000'}, xlabel='Date'>
-[[file:./.ob-jupyter/5ca5ad24ba34fc28a6cd58feccbbbbe2f70f1bc7.png]]
+[[file:./.ob-jupyter/62216baf51ef139e723a97c36ec43e226928565a.png]]
 :END:
 
 The higher risk portfolio ended up with higher total returns for this period.
 Obviously, past performance is not an indicator of future results, but the additional risk we took appears to have been compensated.
+
+
+Finally, we can look at the over-under on returns of our riskier portfolio:
+#+begin_src jupyter-python :session MiniProject1 :results value :exports both
+ou = both["Portfolio 2 Returns"] - both["Portfolio 1 Returns"]
+ou = (1+ ou).groupby(pd.Grouper(freq="YE")).agg("prod")-1
+ou.index = ou.index.year
+(100*ou).plot(kind="bar",
+              rot = 70,
+              title="High Risk Returns - Low Risk Returns",
+              ylabel="%\\Delta$% Return",
+              xlabel="Year")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <Axes: title={'center': 'High Risk Returns - Low Risk Returns'}, xlabel='Year', ylabel='%\\Delta$% Return'>
+[[file:./.ob-jupyter/8540d240f2037dd698e998820485618fcf9982a9.png]]
+:END:
+The difference in returns largely follows the trends we observed with SCV over/underperformance, but the magnitude is blunted by the inclusion of some total market funds and the bonds to even things out.
 
 # Local Variables:
 # jupyter-executable: "../.venv/bin/jupyter"
