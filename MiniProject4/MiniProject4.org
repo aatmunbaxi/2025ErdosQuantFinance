@@ -1,0 +1,526 @@
+#+title: Mini Project 4
+#+author: Aatmun Baxi
+#+begin_src emacs-lisp
+(pyvenv-activate "../.venv/")
+(setq! python-shell-buffer-name "MiniProject4")
+#+end_src
+
+#+RESULTS:
+
+* Project Statement
+Explore the impact of a non-constant volatility term \(\sigma \) on the distribution of profits of delta hedging.
+You are encouraged to research and explore a \(\sigma \) hedging stategy and write code that simulates the profit distribution of the \(\sigma \) hedging strategy
+
+* Given Code
+#+begin_src jupyter-python :session MiniProject4 :exports code :results none
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set_style('darkgrid')
+#+end_src
+
+#+begin_src jupyter-python :session MiniProject4 :exports code :results none
+def stock_path_custom_sigma(S0, t, r, mu, n_paths, n_steps):
+    '''
+    Generation of custom stock paths following Geometeric Brownian motion,
+    but log-returns do not have constant volatility.
+
+    Each step of the log-returns, there is a
+    1) 50% the volatility is .2
+    2) 30% chance the volatility is .3
+    3) 20% chance the volatility is .45
+
+    Inputs:
+    S0 (float): initial stock value
+    t (float): time interval of stock path movements in years
+    r (float): risk-free interest rate
+    mu (float): drift of log-returns
+    n_paths (int): number of stock paths
+    n_steps (float): number of steps in each stock path
+
+    Returns:
+
+    Simuatled stock paths
+    '''
+
+    #Noise in volatility
+    noise = np.random.normal(0,1,size = (n_paths, n_steps))
+
+    #Custom sigma that is not constant
+    sigma = np.random.choice([.2,.3,.45], p = [.5, .3, .2], size = (n_paths, n_steps))
+
+    #Time increment between each step
+    dt = t/n_steps
+
+    #log-returns between each step
+    increments = (mu + r - .5*sigma**2)*dt + sigma*np.sqrt(dt)*noise
+
+    #Cumulative log-returns at each step
+    log_returns = np.cumsum(increments, axis = 1)
+
+
+    #paths
+    paths = S0*np.exp(log_returns)
+
+
+    #Adjoint initial value S0 at start of each simulated path
+    paths = np.insert(paths, 0, S0, axis = 1)
+
+
+    return paths
+#+end_src
+
+#+RESULTS:
+
+
+#+begin_src jupyter-python :session MiniProject4
+S0 = 100
+t = 1
+r = 0.039
+mu = 0.275
+n_paths = 5
+n_steps = 252
+
+simulated_paths = stock_path_custom_sigma(S0, t, r, mu, n_paths, n_steps)
+plt.figure(figsize = (12,8))
+
+for path in simulated_paths:
+    plt.plot(path)
+
+plt.title(f'{n_paths} Simulated Paths with Custom Sigma', size = 20)
+plt.show()
+#+end_src
+
+#+RESULTS:
+[[file:./.ob-jupyter/681c0bc4b441ad5cbb37c1d3dbf85b6a5122b93f.png]]
+
+* GARCH(1,1)
+Let \([0,T]\) be a unit of time we want to model the evolution of a stock log returns over, subdivided into \(n\) equally spaced intervals.
+Let \(r_t\) be the log return of the stock at time \(t\).
+The GARCH(1,1) computes a time series of volatilites \(\sigma _t^{2}\) with \(t\in [0,T]\) as a weighted sum of the previous period's volatility \(\sigma _{t-1}^{2}\) and log returns \(r_{t-1}^{2}\).
+It specifies
+\[\sigma _{t+1}^2 = \omega  + \alpha \sigma _t^2 + \beta r _t^{2}\]
+where \(\alpha ,\beta ,\omega \) are positive parameters whose sum is at most \(1\).
+
+Typically, GARCH(1,1) and its relatives are used to fit volatility models of known time series, and the parameters are usually optimized to do so according to whatever metrics a practitioner wants.
+Because we are modelling forward movements of stocks, we will be choosing them somewhat arbitrarily, though we will use parameters that resemble the optimized parameters for stock-like data.
+
+Since this model is inherently recursive, vectorizing it will unfortunately not be an option.
+We will continue to assume that the stock path follows a risk-neutral geometric Brownian motion.
+The function can take either a single spot price, or a list/array of spot prices, and will simulate =n_paths= for each spot price.
+#+begin_src jupyter-python :session MiniProject4 :exports code :results none
+def GARCH11_paths(S0, t, r, mu, n_paths, n_steps,**kwargs):
+    '''
+    Generation of custom stock paths following Geometeric Brownian motion,
+    but log-returns do not have constant volatility.
+
+    Inputs:
+    S0 (float,1d array,list): initial stock value or list of inital values
+    t (float): time interval of stock path movements in years
+    r (float): risk-free interest rate
+    mu (float): drift of log-returns
+    n_paths (int): number of stock paths
+    n_steps (float): number of steps in each stock path
+    ,**kwargs
+    omega: omega parameter
+    alpha: alpha parameter
+    beta: beta parameter
+
+    Returns:
+
+    Simulated stock paths
+    '''
+    omega = kwargs["omega"]
+    alpha = kwargs["alpha"]
+    beta = kwargs["beta"]
+
+    S0 = np.array(S0)
+    num_spots = S0.size
+
+    S0 = np.repeat(S0,n_paths,axis=0)
+    #Noise in volatility
+    noise = np.random.normal(0,1,size = (num_spots*n_paths, n_steps))
+
+    #Custom sigma that is not constant
+    sigma = np.zeros((num_spots*n_paths,n_steps))
+
+    # Initial volatility is long run vol
+    sigma[:,0] = np.full(num_spots*n_paths,omega/(1-alpha-beta))
+
+    # Log returns at each step
+    increments = np.zeros((num_spots*n_paths,n_steps))
+    dt = t/n_steps
+
+    for i in range(1,n_steps):
+        sigma[:,i] = omega + alpha*increments[:,i-1]**2 + beta*sigma[:,i-1]
+        increments[:,i] = (mu + r - 0.5*sigma[:,i])*dt + np.sqrt(sigma[:,i]*dt)*noise[:,i]
+
+
+    #Cumulative log-returns at each step
+    log_returns = np.cumsum(increments, axis = 1)
+    S0_big = np.expand_dims(S0,1)
+    paths = S0_big*np.exp(log_returns)
+
+
+    # paths = np.insert(paths, 0, S0, axis = 1)
+    return (paths,sigma)
+#+end_src
+
+
+
+For example, we can simulate 3 paths each of stocks with starting prices 100, and 100-20.
+#+begin_src jupyter-python :session MiniProject4 :results value
+def plot_paths(paths,title):
+    plt.title(title)
+    for path in paths:
+        plt.plot(path)
+    plt.show()
+mu = 0.1
+omega, alpha, beta = (0.01,0.04,0.92)
+K = 110
+paths, sigmas = GARCH11_paths([S0,S0-20],t,r,mu,2,250,K=K,
+                              omega=omega,
+                              alpha=alpha,
+                              beta=alpha)
+plot_paths(paths,"GARCH(1,1) Simulated Paths")
+#+end_src
+
+#+RESULTS:
+[[file:./.ob-jupyter/c0229f8910504d35e423c90e6da52014891ebd0a.png]]
+
+
+
+
+
+
+#+begin_src jupyter-python :session MiniProject4
+plt.title("Some Conditional volatilities")
+for i in range(2):
+    plt.plot(sigmas[i,15:])
+#+end_src
+
+#+RESULTS:
+[[file:./.ob-jupyter/e5707a760523b26f815ae6e7200159083ff32275.png]]
+
+Inspecting the graphs of some the volatility series, we see that the accounting for previous steps' volatilities causes volatility to "hang around" when it spikes, which is something observed empirically in stock data.
+The interpretation of GARCH parameters remains up for debate, but inspecting the equation, we can roughly say that \(\beta \) represents how "sticky" volatility tends to be: the smaller the \(\beta \), the less the previous period's volatility affect the current period's volatility.
+It's a similar story with \(\alpha \), but it controls how the previous period's price action affects the current period's volatility.
+
+
+* Constant Volatility Profit Distribution
+To establish a control for what we should compare our profit/loss distributions against, we will model a portfolio of selling calls with delta hedging \(N\) times on a stock with risk-neutral drift with constant volatility.
+#+begin_src jupyter-python :session MiniProject4 :exports code :results none
+def stock_path_constant_sigma(S0, t, r, mu, n_paths, n_steps, **kwargs):
+    '''
+    Inputs:
+    S0 (float): initial stock value
+    t (float): time interval of stock path movements in years
+    r (float): risk-free interest rate
+    mu (float): drift of log-returns
+    n_paths (int): number of stock paths
+    n_steps (float): number of steps in each stock path
+
+    Returns:
+
+    Simuatled stock paths
+    '''
+
+    sigma = kwargs["sigma"]
+
+    S0 = np.array(S0)
+    num_spots = S0.size
+
+    S0 = np.repeat(S0,n_paths,axis=0)
+    #Noise in volatility
+
+    noise = np.random.normal(0,1,size = (num_spots*n_paths, n_steps))
+
+    #Custom sigma that is not constant
+    sigma = np.full((num_spots*n_paths, n_steps),  sigma)
+
+    #Time increment between each step
+    dt = t/n_steps
+
+    #log-returns between each step
+    increments = (mu + r - .5*sigma**2)*dt + sigma*np.sqrt(dt)*noise
+
+    #Cumulative log-returns at each step
+    log_returns = np.cumsum(increments, axis = 1)
+
+
+    S0_big = np.expand_dims(S0,1)
+    paths = np.repeat(S0_big,log_returns.shape[1],axis=1)*np.exp(log_returns)
+
+
+    #Adjoint initial value S0 at start of each simulated path
+    # paths = np.insert(paths, 0, S0, axis = 1)
+
+
+    return paths,sigma
+#+end_src
+
+#+RESULTS:
+
+#+begin_src jupyter-python :session MiniProject4
+vol = 0.2
+paths =  stock_path_constant_sigma([S0,S0+10],t,r,mu,2,n_steps,sigma=vol)[0]
+plot_paths(paths,f"Simulated Paths; Constant volatility $\\sigma = {vol}$")
+#+end_src
+
+#+RESULTS:
+[[file:./.ob-jupyter/fda50305b5f059c2278b9b043980176f758b01a1.png]]
+
+* Helper  Functions
+** Monte Carlo Options Pricer
+We first make a Monte Carlo pricer with generic function to create the simulated paths.
+The stock paths are assumed to follow a geometric Brownian motion with possible drift under a risk neutral measure.
+#+begin_src jupyter-python :session MiniProject4 :exports code :results none
+def mc_pricer(S0,T,r,mu,n_paths,n_steps,K,path_gen,callput, **kwargs):
+    """
+    Monte-Carlo pricer with generic stock path generator.
+
+
+    Inputs:
+    S0 (float, array) - Spot
+    T - Time to expiration in years
+    r - Risk Free Rate
+    mu - Stock drift
+    n_paths - Number of simulations
+    n_steps - Number of steps to take on each path
+    K - Strike Price
+    path_gen (callable) - Function taking args
+            S0,T,r,mu,n_paths,n_steps, with possibly more
+    callput (string) - Call or put option
+    **kwargs - Extra arguments to pass to path_gen callable
+
+    Return:
+    Array of option prices for each spot
+    """
+    S0 = np.array(S0)
+    s = S0.size
+    paths = path_gen(S0,T,r,mu,n_paths,n_steps,**kwargs)[0]
+    if callput == "CALL":
+        paths = np.reshape(paths,(-1,n_paths,n_steps))
+        payoff = np.maximum(paths[:,:,-1] - K, 0)*np.exp(-r*T)
+        return np.mean(payoff,axis=1)
+    if callput == "PUT":
+        paths = np.reshape(paths,(-1,n_paths,n_steps))
+        payoff = np.maximum(K-paths[:,:,-1] , 0)*np.exp(-r*T)
+        return np.mean(payoff,axis=1)
+
+#+end_src
+*** Testing
+We expect to converge on the Black-Scholes option price when our underlying asset has zero drift.
+#+begin_src jupyter-python :session MiniProject4
+S0 = 100
+K = 110
+t = 1
+r = 0.039
+mu = 0
+mc_pricer(S0,t,r,mu,500,400,
+          K,
+          stock_path_constant_sigma,"CALL",
+          sigma=0.2)
+#+end_src
+
+#+RESULTS:
+: array([5.24569814])
+
+As a sanity check, we see that our pricer agrees with the closed form Black-Scholes option price for a call option.
+#+begin_src jupyter-python :session MiniProject4
+# Compute BS call option price with same underlying data
+d1 = (np.log(S0/K)+(r+(0.5*0.2**2))*t)/(0.2*np.sqrt(t))
+d2 = d1 - 0.2*np.sqrt(t)
+from scipy.stats import norm
+call_price = norm.cdf(d1)*S0 - norm.cdf(d2)*K*np.exp(-r)
+call_price
+#+end_src
+
+#+RESULTS:
+: np.float64(5.6215377292823945)
+
+
+** Monte Carlo Option Delta
+We use the Monte Carlo option pricer to estimate option delta using the second order finite difference estimation.
+#+begin_src jupyter-python :session MiniProject4 :exports code :results none
+def mc_delta(S0, T,r,mu,delta_sims,K,path_gen,callput,**kwargs):
+    """
+    Monte Carlo estimation of Black-Scholes call deltas for an array of spot prices
+    with stochastic volatility model (discrete distribution).
+
+    Parameters:
+    S0 (float, array) - Spot
+    T - Time to expiration in years
+    r - Risk Free Rate
+    mu - Stock drift
+    delta_sims (int): Number of simulations
+    K - Strike Price
+    path_gen (callable) - Function taking args
+            S0,T,r,mu,n_paths,n_steps, with possibly more
+    callput (string) - Call or put option
+    **kwargs - Extra arguments to pass to path_gen callable
+
+
+    Return
+    array: simulated delta(s) of call option
+    """
+    S0 = np.array(S0)
+    bump = 0.1 * S0
+
+    del_steps = 50
+    try:
+        del_steps = kwargs["del_steps"]
+    except:
+        del_steps = 50
+
+    down = mc_pricer(S0-bump,T,r,mu,delta_sims,del_steps,K,path_gen,callput,**kwargs)
+    up = mc_pricer(S0+bump,T,r,mu,delta_sims,del_steps,K,path_gen,callput,**kwargs)
+
+    deltas = (up - down) / (2 * bump)
+    s = deltas.shape
+    if len(s) > 1:
+        return np.mean(deltas, axis=0)
+    else:
+        return deltas
+
+#+end_src
+
+In the absence of a rigorous convergence analysis for the Monte Carlo pricer, we choose to calculate the value of the option with a 50 step path generation, relying on the central limit theorem to give a more precise estimation of delta as the number of simulations increases.
+
+
+We can see the difference in call-put delta with the same strike when stock paths are modeled by the GARCH(1,1) volatility model.
+
+#+begin_src jupyter-python :session MiniProject4
+spots = [100, 120]
+K = 110
+t = 0.5
+mu = 0.2
+
+
+cdelta, pdelta = (mc_delta(spots,t,r,mu,30000,K,
+                           GARCH11_paths, "CALL",
+                           omega=omega,alpha=alpha,beta=beta,mc_steps=2),
+                  mc_delta(spots,t,r,mu,30000,K,
+                           GARCH11_paths, "PUT",
+                           omega=omega,alpha=alpha,beta=beta,mc_steps=2))
+fs = [f"{K}C @ S = {spots[i]} delta: {cdelta[i]}\n{K}P @ {spots[i]} delta:  {pdelta[i]}" for i in range(len(cdelta))]
+from pprint import pp
+for s in fs:
+    print(s)
+#+end_src
+
+#+RESULTS:
+: 110C @ S = 100 delta: 0.5049740979081234
+: 110P @ 100 delta:  -0.531646713383102
+: 110C @ S = 120 delta: 0.7912508385894137
+: 110P @ 120 delta:  -0.25645322174095325
+
+** Selling options with hedging
+#+begin_src jupyter-python :session MiniProject4 :results none :exports code
+def mc_hedge_profits(S0, T, r, mu, n_sims,n_steps,delta_sims , n_hedges, K, pricer, callput, **kwargs):
+
+    """Description
+    Monte-Carlo simulation of the Black-Scholes value of a call option with Delta based control variants
+
+
+    Parameters:
+    S0 (float): spot price
+    T (float): time to expiration
+    r (float): risk-free interest rate
+    mu (float): Drift of log-returns
+    n_sims (int): Number of simulations
+    n_steps (int): Steps for MC option pricing
+    delta_sims (int): number of sims for delta approximation
+    n_hedges (int): number of delta control variants at evenly spaced increments
+    K (float): strike price
+    pricer (callable): Function taking S0,T,r,mu,n_sims,n_steps for stock path generation
+    callput (string): "CALL" or "PUT"
+    ,**kwargs: Additional arguments for mc_delta and pricer function
+
+
+
+    Return:
+    np.array of simulated values of Black-Scholes value of call option
+    """
+    dt = T/n_hedges
+    paths = pricer(S0,T,r,mu,n_sims,n_steps,**kwargs)[0]
+    path_ends = paths[:,-1]
+    payoffs = np.maximum(path_ends - K, 0)*np.exp(-r*t)
+
+    #Simulate stock profits at each interval
+
+    ## profit from start to first step discounted to time 0
+
+    paths_first_step = paths[:,0]
+    delta_start = mc_delta(S0,T,r,mu,delta_sims,K,pricer,callput,**kwargs)
+    stock_profits_start = (paths_first_step - np.exp(r*dt)*S0)*delta_start*np.exp(-r*dt)
+    total_stock_profits = []
+    total_stock_profits.append(stock_profits_start)
+
+    ## stock profits in intermediate steps
+    for i in range(1,n_hedges):
+        #time to expiration from starting point
+        #needed to find delta of option and how much stock should be held to be delta neutral until next step
+        tte = T - i*dt
+        deltas = mc_delta(paths[:,i-1], tte, r,mu,delta_sims,K,pricer,callput,**kwargs)
+        stock_profit = (paths[:,i] - paths[:,i-1]*np.exp(r*dt))*deltas*np.exp(-r*(i+1)*dt)
+        total_stock_profits.append(stock_profit)
+
+    stock_profits = np.sum(total_stock_profits, axis = 0)
+
+    profits_hedged = payoffs - stock_profits
+
+    return profits_hedged
+#+end_src
+
+* GARCH(1,1) \(\Delta \) Hedge Profits
+#+begin_src jupyter-python :session MiniProject4 :exports both
+n_sims =  1000
+delta_sims, n_hedges, pather = 200, 50, GARCH11_paths
+del_steps=2
+mu = 0.2
+omega,alpha,beta = 0.01,0.02,0.94
+ps = mc_hedge_profits(S0,T,r,mu,n_sims,n_steps,
+                      delta_sims,n_hedges,K,
+                      pather, "CALL",
+                      omega=omega,alpha=alpha,beta=beta,del_steps=2)
+
+plt.hist(ps,bins=50,label="Simulated Profits",color='black')
+plt.axvline(np.min(ps),label=f"Max loss: {np.min(ps):.2f}",color='red')
+plt.axvline(np.mean(ps),label=f"Mean P/L: {np.mean(ps):.2f}",color='green')
+plt.title(f"$\\Delta$ neutral profits; sell 1Y {K}C on stock @ {S0} with drift {mu}, GARCH(1,1)")
+plt.legend()
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <matplotlib.legend.Legend at 0x7f14039f6780>
+[[file:./.ob-jupyter/bc365a44ef17973f4e27bcd3111d95ba0ea79b99.png]]
+:END:
+
+* Constant Volatility \(\Delta \) Hedge Profits
+#+begin_src jupyter-python :session MiniProject4 :exports both
+n_sims =  1000
+delta_sims, n_hedges, pather = 200, 50, stock_path_constant_sigma
+del_steps=2
+mu = 0.2
+
+# pather args
+sigma = 0.15
+ps = mc_hedge_profits(S0,T,r,mu,n_sims,n_steps,
+                      delta_sims,n_hedges,K
+                      pather, "CALL",sigma=sigma)
+
+plt.hist(ps,bins=50,label="Simulated Profits",color='black')
+plt.axvline(np.min(ps),label=f"Max loss: {np.min(ps):.2f}",color='red')
+plt.axvline(np.mean(ps),label=f"Mean P/L: {np.mean(ps):.2f}",color='green')
+plt.title(f"$\\Delta$ neutral profits; sell 1Y {K}C on stock @ {S0} with drift {mu}, $\\sigma = 0.15$")
+plt.legend()
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: <matplotlib.legend.Legend at 0x7f140392e840>
+[[file:./.ob-jupyter/be34502eb0cf9f6ebc23283eda6618c7d73581fe.png]]
+:END:
