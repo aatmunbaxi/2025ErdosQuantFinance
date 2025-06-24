@@ -131,8 +131,11 @@ There are formal tests for normality such as she Shapiro-Wilk test, which we can
 Below is the resulting \(p\) values extracted from the test, where the null hypothesis is that the data are normally distributed.
 #+begin_src jupyter-python :exports both :session MiniProject2
 from scipy.stats import shapiro, normaltest
-
 names = ["Logdaily", "Logweekly","Logmonthly","Logyearly"]
+weekly_logs = log_returns.groupby(pd.Grouper(freq="W-MON")).agg("sum")
+monthly_logs = log_returns.groupby(pd.Grouper(freq="ME")).agg("sum")
+yearly_logs = log_returns.groupby(pd.Grouper(freq="YE")).agg("sum")
+
 vars = [log_returns,weekly_logs,monthly_logs,yearly_logs]
 results = {x[0]: float(shapiro(x[1])[1]) for x in zip(names,vars)}
 for res in results:
@@ -144,9 +147,9 @@ for res in results:
 : Shapiro-Wilk Logweekly return p-value: 1.178035812533499e-52
 : Shapiro-Wilk Logmonthly return p-value: 1.2008592564652523e-28
 : Shapiro-Wilk Logyearly return p-value: 0.00021204832741650683
-: /nix/store/8f9zfpbmybfl09aq4a9nzp8a9gwgqjbf-python3.12-scipy-1.15.3/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:586: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 35112.
+: /nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:586: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 35112.
 :   res = hypotest_fun_out(*samples, **kwds)
-: /nix/store/8f9zfpbmybfl09aq4a9nzp8a9gwgqjbf-python3.12-scipy-1.15.3/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:586: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 7316.
+: /nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:586: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 7316.
 :   res = hypotest_fun_out(*samples, **kwds)
 
 In every performance of the Shapiro-Wilk test, the resulting \(p\) value is decidedly below \(0.05\), so in every case we reject the null hypothesis that the data are normally distributed.
@@ -162,13 +165,6 @@ print(f"p-values; skewness-kurtosis test:\n{normaltest(pd.concat([log_returns, w
 : [0.00000000e+00 0.00000000e+00 2.01874396e-72 5.74204997e-06]
 
 In this test, too, there is sufficient evidence to reject the hypothesis that the data are normaly distributed at all sampled time scales.
-
-We can also apply the Anderson test to each series of returns
-#+begin_src jupyter-python :exports both :session MiniProject2
-
-#+end_src
-
-#+RESULTS:
 
 * Testing Particular Bull Markets
 We can selectively pick periods of time where volatility is lower, which typically happens during bull markets
@@ -219,7 +215,7 @@ print(f"p = {normaltest(monthly_logs[start:end])[1]}")
 #+RESULTS:
 : p = 0.007993736572718346
 
-This bull market instead does show signs of difference from normality.
+This bull market instead does show evidence against normality.
 * Individual Stocks
 We should not expect it to be easy to construct a portfolio of stocks (i.e. equities) with lognormal returns over a significant period of time.
 Equities are inherently riskier than other financial assets like bonds, and show fatter tails in distributions of historical returns on virtually all time scales.
@@ -273,7 +269,7 @@ log_ko[s1:s2].plot(kind="hist",bins=80)
 :END:
 
 Apart from the distribution of logdaily returns looking more favorable than our other assets, we can check the skewness and kurtosis:
-#+begin_src jupyter-python :session MiniProject2
+#+begin_src jupyter-python :session MiniProject2 :exports both
 print(f"KO logreturns 04/1995-04/1996 p-value: {normaltest(log_ko[s1:s2])[1]}")
 #+end_src
 
@@ -384,28 +380,31 @@ vti = csv_to_series("../MiniProject1/VTI-returns.csv")["VTI Returns"]
 vxus = csv_to_series("../MiniProject1/VXUS-returns.csv")["VXUS Returns"]
 govt = csv_to_series("../MiniProject1/GOVT-returns.csv")["GOVT Returns"]
 zroz = csv_to_series("../MiniProject1/ZROZ-returns.csv")["ZROZ Returns"]
-p2 = 0.28*vti[inception:] + 0.27*dfsvx[inception:] + 0.18*vxus[inception:] + 0.17*disvx[inception:] + 0.10*zroz[:inception]
+p2 = 0.28*vti[inception:] + 0.27*dfsvx[inception:] + 0.18*vxus[inception:] + 0.17*disvx[inception:] + 0.10*zroz[inception:]
 #+end_src
 
 #+RESULTS:
 
 #+begin_src jupyter-python :session MiniProject2 :results value :exports both
-log_p = np.log(1+p2).dropna()
+log_p = np.log(1+p2)
 reject_normality("P1 Portfolio", log_p)
 #+end_src
 
 #+RESULTS:
-[[file:./.ob-jupyter/91e5562f09a1be55f39bba0f34bfa331680a571c.png]]
+[[file:./.ob-jupyter/47219e4d2ada97e5cec31f2dedb5b1dde0589f1c.png]]
 
 Interestingly, the high risk portfolio from my first project show more yearly periods with promising signs of normally distributed returns, moreso than even our most "normal" stock choice KO.
 The difference is especially stark in the semiannual period, where over half the analyzed rolling periods did not produce enough evidence to reject normality.
 
 * Conclusion
+In all of our tested data, between 40%-65% of any contiguous semiannual periods of historical logdaily returns showed enough evidence to reject the notion that returns are normally distributed.
+~80%+ of contiguous yearly windows of logdaily returns show strong evidence against normality, with that number increasing as you look for longer windows.
+In other words, searching for normally distributed returns over any significant period of time is a coin flip at best, or a losing game at worst (in our data at least).
+
 We can conclude that finding normally distributed returns in stocks is *essentially an exercise in arbitrary data mining*, and the pattern fails far more often than it succeeds.
 Though, this is the point of this exercise: the assumption of normal stock returns in various financial models such as Black-Scholes is not borne out in reality, and this illustrates that plainly.
-The essence of assuming lognormal returns is simply a convenience to find closed form solutions to option prices, and models incorporating assumptions that reflect reality are much more difficult to work with.
+The essence of assuming lognormal returns is simply a convenience to find closed form solutions to option prices, and models incorporating assumptions that reflect reality are much more difficult to work with, requiring simulation and the analysis in limiting cases to determine a good enough answer.
 
 # Local Variables:
 # compile-command: "pandoc -s -o MiniProject2.ipynb MiniProject2.org -V header-includes='<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>'"
-# eval: (setq-local jupyter-executable (inheritenv (executable-find "jupyter")))
 # End
