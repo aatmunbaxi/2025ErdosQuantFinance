@@ -15,24 +15,18 @@
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
           venvDir = ".venv";
-          packages = with pkgs; [ poetry gnumake python312 ] ++ (with python312Packages; [
+          packages = with pkgs; [ poetry jupyter gnumake python312 ] ++ (with python312Packages; [
             pandas
-            jupyter
             matplotlib
             pip
             venvShellHook
-            yfinance
             numpy
             scipy
             pandoc
             seaborn
           ]);
           LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${pkgs.stdenv.cc.cc.lib}/lib";
-          # shellHook = ''
-
-          #       '';
         };
-
       });
     };
 }
