@@ -1,4 +1,4 @@
-#+title: Quant Finance Mini Project 1
+#+title: Mini Project 1
 #+author: Aatmun Baxi
 
 #+options: toc:nil
@@ -7,7 +7,6 @@
 *Use current stock data to create two potentially profitable investment portfolios. One that is higher risk and one that is lower risk.*
 
 *You are to explain your interpretation of a high risk profile and low risk profile of a portfolio. You should provide some measurable quantitative data in you explanation.*
-
 
 * Portfolio Choice and Motivation
 It is well documented that investors that invest for consumption goals in the long term (i.e. to fund consumption >10 years from the beginning of investment) can maximize expected return and minimize risk—as defined by volatility and probability of (un)realized capital loss—by holding broadly diversified, low cost index funds of risky assests with expected returns in excess of 3 month US treasury bills.
@@ -103,13 +102,16 @@ us_exus = pd.read_csv("./us-exus.csv")
 # us_exus.index = pd.to_datetime(us_exus["Date"])
 us_exus.set_index(pd.to_datetime(us_exus["Date"]),inplace=True)
 us_exus.drop("Date",axis=1,inplace=True)
-us_exus.plot(rot=70)
+us_exus.plot(rot=70,
+             title="Value of $10,000 invested (log scale)",
+             ylabel="Value ($)",
+             logy=True)
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: <Axes: xlabel='Date'>
-[[file:./.ob-jupyter/834561ca30bf12f12c03791a8a0eeca063f89556.png]]
+: <Axes: title={'center': 'Value of $10,000 invested (log scale)'}, xlabel='Date', ylabel='Value ($)'>
+[[file:./.ob-jupyter/a46560d73e514f1c1e106576667b4a2420a7cb97.png]]
 :END:
 
 
@@ -510,7 +512,7 @@ print(f"Portfolio 1 Volatility: {p1sig:.3f}\nPortfolio 2 Volatility: {p2sig:.3f}
 : Portfolio 1 Volatility: 0.159
 : Portfolio 2 Volatility: 0.155
 
-In the end, adding all those volatile assets actually *lowered* the portfolio's overall volatility!
+In the end, adding all those volatile assets actually *lowered* the portfolio's historical volatility!
 This result should be surprising given concentration risk and the kinds of assets we added, but is it not so surprising from a diversification standpoint.
 We ended up concentrating more capital in assets that were more uncorrelated with each other, smoothing out the ride of returns.
 
@@ -613,13 +615,14 @@ We inspect the distribution of returns on each of the portfolios.
 Finally, we backtest both portfolios with a starting value of of $1000 invested on 1994-12-28.
 
 #+begin_src jupyter-python :session MiniProject1 :exports both
-((1+both).cumprod()*1000).plot(title = "Growth of $1000")
+((1+both).cumprod()*1000).plot(title = "Growth of $1000 (log scale)",
+                               logy=True)
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: <Axes: title={'center': 'Growth of $1000'}, xlabel='Date'>
-[[file:./.ob-jupyter/62216baf51ef139e723a97c36ec43e226928565a.png]]
+: <Axes: title={'center': 'Growth of $1000 (log scale)'}, xlabel='Date'>
+[[file:./.ob-jupyter/dacee8f043232507b18b4718135919c620e801c2.png]]
 :END:
 
 The higher risk portfolio ended up with higher total returns for this period.
@@ -643,9 +646,8 @@ ou.index = ou.index.year
 : <Axes: title={'center': 'High Risk Returns - Low Risk Returns'}, xlabel='Year', ylabel='%\\Delta$% Return'>
 [[file:./.ob-jupyter/8540d240f2037dd698e998820485618fcf9982a9.png]]
 :END:
-The difference in returns largely follows the trends we observed with SCV over/underperformance, but the magnitude is blunted by the inclusion of some total market funds and the bonds to even things out.
+The difference in returns largely follows the trends we observed with SCV over/underperformance, but the magnitude of over-underperformance is blunted by the inclusion of some total market funds and the bonds to even things out.
 
 # Local Variables:
-# jupyter-executable: "../.venv/bin/jupyter"
 # compile-command: "pandoc -s -o MiniProject1.ipynb MiniProject1.org -V header-includes='<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>'"
 # End:
