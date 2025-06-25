@@ -672,7 +672,7 @@ def GARCH11_paths(S0, t, n_paths, n_steps,**kwargs):
 
 
 For example, we can simulate 3 paths each of stocks with starting prices 100, and 100-20.
-#+begin_src jupyter-python :session MiniProject4 :results value
+#+begin_src jupyter-python :session MiniProject4 :results value :exports both
 g11omega, g11alpha, g11beta = (0.01,0.10,0.60)
 paths, sigmas = GARCH11_paths(S0,t,10,252,K=K,
                               omega=g11omega,
@@ -687,7 +687,7 @@ plot_paths(paths,"GARCH(1,1) Simulated Paths")
 
 
 
-#+begin_src jupyter-python :session MiniProject4
+#+begin_src jupyter-python :session MiniProject4 :exports both
 plt.title("Some Conditional volatilities")
 for i in range(2):
     plt.plot(sigmas[i,10:])
