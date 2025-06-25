@@ -398,11 +398,10 @@ plt.show()
 The constant elasticity of variance (CEV) model is another stochastic volatility model and is a superset of geometric Brownian motion.
 It is one of the simpler /local volatility/ models, where the drift term multiplied by the random noise depends on time and the current asset price \(S_t\).
 
-The discretized CEV dynamics can obey
+The (Euler-Maruyama) discretized CEV dynamics obey
 \[S_t = S_t + \mu S_{t-1}\tau  + \sigma S^{\gamma }_{t-1} \sqrt{\tau } Z_t \]
 where \(\sigma,\gamma  \geqslant 0 \) and \(\mu  \) is a drift term and \(\tau  = \frac{T}{n}\).
 Note that at \(\gamma =1\), the dynamics match that of geometric Brownian motion.
-
 #+begin_src jupyter-python :session MiniProject4 :results none :exports code
 def cev_path(S0,T,n_paths,n_steps,**kwargs):
     gamma = kwargs["gamma"]
@@ -484,24 +483,20 @@ plt.show()
 [[file:./.ob-jupyter/8f3a475e9bef185d21e06f962eeaaadc40052d8c.png]]
 :END:
 **  Hull-White Stochastic Volatility with Drift
-The CEV model's drift term depended on both \(t\) and \(S_t\).
+The CEV model's diffusion term depended on both \(t\) and \(S_t\).
 There is yet another superset of these local volatility models called /stochastic volatility models/, where the volatility term follows a stochastic differential equation in its own right.
 The Hull-White stochastic volatility model is one such example, which we consider here.
 
 Let \(S_t,\sigma _t\) denote the  price and volatility of an asset at time \(t\).
 The Hull-White process with drift has dynamics
-\begin{align*}
-dS_t &=  \mu S_t \,dt+\sigma _t S_t\, dW_t \\
-d\sigma _t &= \omega \sigma _t \,dZ_t.
-\end{align*}
+\[dS_t= \mu S_t \,dt+\sigma _t S_t\, dW_t\]
+\[d\sigma _t = \omega \sigma _t \,dZ_t\]
 where \(\omega \) is a positive real number, \(\mu \) is a drift term, and \(W_t,Z_t\) are iid normally distributed variables.
 The standard Hull-White stochastic volatility model does not include a drift term, but we add one to make it comparable to our other model choices.
 
 The Euler-Maruyama discretization of \(S_t\) gives
-\begin{align*}
-S_{i+1} &= S_i+S_i \left( \mu\tau  + \sigma \sqrt{\tau }\epsilon _{i} \right)\\
-\sigma _{i+1} &= \sigma _i \exp \left( \omega \sqrt{\tau }V_i - \frac{1}{2}\omega   _i^{2} \tau  \right)
-\end{align*}
+\[S_{i+1} = S_i+S_i \left( \mu\tau  + \sigma \sqrt{\tau }\epsilon _{i} \right)\]
+\[\sigma _{i+1} = \sigma _i \exp \left( \omega \sqrt{\tau }V_i - \frac{1}{2}\omega   _i^{2} \tau  \right)\]
 where \(\tau  = \frac{T}{n}\), the step length on an interval of time.
 
 We can rewrite the differences of normal distributions as \(W_{i+1} -W_i = \sqrt{\tau }\epsilon _i\) and \(Z_{i+1} - Z_i = \sqrt{\tau }V_i\) where \(V_i,\epsilon _i\) are again normally distributed iid variables.
@@ -740,16 +735,12 @@ plt.show()
 
 ** DONE SABR Volatility Model
 The SABR volatility model (with added drift) has dynamics
-\begin{align*}
-d S_t &=\mu S_t+\sigma _tS_t^{\beta }\, dW_t\\
-d \sigma _t &= \alpha \sigma _{t}\, dW^{'}_t
-\end{align*}
+\[d S_t =\mu S_t+\sigma _tS_t^{\beta }\, dW_t\]
+\[d \sigma _t = \alpha \sigma _{t}\, dW^{'}_t\]
 where \(W_t, W_t'\) are correlated Brownian motions with correlation \(\rho \).
 A simple Euler-Maruyama discretization yields discrete dynamics
-\begin{align*}
-S_{t+1} &=S_t+ \mu \tau S_t+ \sigma_tS_t^{\beta }\sqrt{\tau }Z_t\\
- \sigma_{t+1} &= \sigma _0 \exp \left( \alpha \sqrt{\tau }(\rho Z_t +\sqrt{1-\rho ^2}\epsilon _{t} ) -\frac{1}{2}\alpha ^2\tau \right)
-\end{align*}
+\[S_{t+1} =S_t+ \mu \tau S_t+ \sigma_tS_t^{\beta }\sqrt{\tau }Z_t\]
+\[ \sigma_{t+1} = \sigma _0 \exp \left( \alpha \sqrt{\tau }(\rho Z_t +\sqrt{1-\rho ^2}\epsilon _{t} ) -\frac{1}{2}\alpha ^2\tau \right)\]
 Where we have solved for \(\sigma _t\) exactly, since it a GBM wirh zero jump.
 
 #+begin_src jupyter-python :session MiniProject4 :results value :exports both
