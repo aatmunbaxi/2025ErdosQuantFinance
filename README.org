@@ -1,9 +1,35 @@
-#+title: Erdos Institute Summer 2025 Quant Finance Boot Camp
+#+title: Erdos Institute Quant Finance Projects
 #+author: Aatmun Baxi
 #+language: en
 
 
+* Index
+** [[https://github.com/aatmunbaxi/2025ErdosQuantFinance/blob/master/MiniProject1/MiniProject1.ipynb][Mini Project 1]]
+*Task*: Create two potentially profitable portfolios, one low risk and one high risk.
+Include quantitative metrics to justify the choices.
 
+*Findings*: A traditionally "high risk" 90/10 stocks/bonds portfolio was historically outperformed by a portfolio made riskier by loading of Fama-French size and value factors, despite the increased active risk (tracking error) and volatility of the individual assets introduced
+** [[https://github.com/aatmunbaxi/2025ErdosQuantFinance/blob/master/MiniProject2/MiniProject2.ipynb][Mini Project 2]]
+*Task*: Investigate the hypothesis that log stock returns are normally distributed.
+
+*Findings*: Historically, logdaily stock returns are not normally distributed over long periods of time, but could possibly show signs of normal distribution on small time scales, and in small bursts therein.
+** [[https://github.com/aatmunbaxi/2025ErdosQuantFinance/blob/master/MiniProject3/MiniProject3.ipynb][Mini Project 3]]
+*Task*: Plot and comment on the sensitivity of Black-Scholes option prices with respect to time to expiration and spot price.
+
+*Findings*: Theta decay eats away at option prices regardless of ITMness, and spot price is asymptotically linear as ITMness increases.
+** [[https://github.com/aatmunbaxi/2025ErdosQuantFinance/blob/master/MiniProject4/MiniProject4.ipynb][Mini Project 4]]
+*Task*: Investigate the effect of using non-constant volatility models  on delta hedging payoff distributions.
+
+*Findings*: Increased hedging increased the reliability of positive return and decreased occurences of catastrophic losses. Type of stochastic process used to model stock path produces payoff distributions with differing shapes. More efficient and more accurate simulation technology simulation should be explored more.
+** [[https://github.com/aatmunbaxi/2025ErdosQuantFinance/blob/master/executive-summary/executive-summary.org][Executive Summary]]
+* Note on Data Used
+Beacause the cource placed an emphasis on total return rather than just price action, return data from [[https://testfol.io/][testfol.io]] was used instead of Yahoo finance.
+All sources of data are provided in the repository, which are typically given as hypothetical growths os $10,000 portfolios invested in the assets mentioned in the notebooks.
+
+Some data such as the bond ETF data is simulated using the methodology described in [[https://portfoliooptimizer.io/blog/the-mathematics-of-bonds-simulating-the-returns-of-constant-maturity-government-bond-etfs][financial literature]].
+This was done to extend historical data of bond ETFs with recent inception dates to more closely match the data availability of older assets, such as the S&P 500.
+As an example, testfolio extends the daily return series of the ZROZ bond ETF from its inception in 2009 all the way back to 1962 using FRED data on yields of 30 year constant maturity bonds.
+Something similar was done to simulate the returns of GOVT using yield data for intermediate duration treasuries.
 
 * Deploying with python virtual environment (recommended)
 Run the following commands to get it up and running:
