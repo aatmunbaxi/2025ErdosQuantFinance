@@ -17,6 +17,7 @@
           venvDir = ".venv";
           packages = with pkgs; [ poetry jupyter gnumake python312 ] ++ (with python312Packages; [
             pandas
+            joblib
             matplotlib
             pip
             venvShellHook
