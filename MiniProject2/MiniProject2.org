@@ -83,8 +83,6 @@ probplot(log_returns,plot=ax[1])
 
 #+RESULTS:
 :RESULTS:
-| array      | ((-4.11049211 -3.90090139 -3.78648197 ... 3.78648197 3.90090139 4.11049211) shape= (35112)) | array      | ((-0.22821587 -0.13783062 -0.11588232 ... 0.11763473 0.13558058 0.15141923) shape= (35112)) |            |                      |
-| np.float64 | (0.01038358253596454)                                                                       | np.float64 | (0.00036322570039683705)                                                                    | np.float64 | (0.9388073761927019) |
 [[file:./.ob-jupyter/8da172e847538984ae8b9f9f10b70ab9626445a6.png]]
 :END:
 
@@ -94,12 +92,12 @@ We  can more thoroughly investigate the outliers.
 
 #+begin_src jupyter-python :exports both :session MiniProject2
 sns.boxplot(log_returns)
+plt.title("S&P500 Logdaily Returns")
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: <Axes: ylabel='SP500 Returns'>
-[[file:./.ob-jupyter/fe334de74dd34080bd4d07edd7c9b521b3c62303.png]]
+[[file:./.ob-jupyter/c25a05bafde2c604d691f024d4835531c7e459c5.png]]
 :END:
 
 The vast majority of the log return values seem to lie in the interval \((-0.05,0.05)\).
@@ -118,8 +116,6 @@ probplot(clamped,plot=ax[1])
 
 #+RESULTS:
 :RESULTS:
-| array      | ((-4.10935154 -3.89970564 -3.78525389 ... 3.78525389 3.89970564 4.10935154) shape= (34939)) | array      | ((-0.0499727 -0.04931548 -0.04908575 ... 0.04881037 0.04915271 0.04929349) shape= (34939)) |            |                      |
-| np.float64 | (0.009595327211446732)                                                                      | np.float64 | (0.00040680457109448564)                                                                   | np.float64 | (0.9780540593602518) |
 [[file:./.ob-jupyter/176b030a0dced7a85d989a5f24555a3bc5a311f5.png]]
 :END:
 
@@ -194,22 +190,6 @@ shap_results.set_index("Ticker")
 
 #+RESULTS:
 :RESULTS:
-#+begin_example
-/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 35112.
-  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
-/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 15967.
-  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
-/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 10590.
-  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
-/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 13980.
-  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
-/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 8119.
-  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
-/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 7654.
-  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
-/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:657: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 7319.
-  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
-#+end_example
 #+begin_export html
 <div>
 <style scoped>
@@ -803,7 +783,7 @@ In other words, searching for normally distributed returns over any significant 
 We can conclude that finding normally distributed returns over long periods of time is *essentially an exercise in arbitrary data mining*, and the pattern fails far more often than it succeeds.
 Though, this is the point of this exercise: the assumption of normal stock returns in various financial models such as Black-Scholes is not borne out in reality, and this illustrates that plainly.
 The essence of assuming lognormal returns is simply a convenience to find closed form solutions to option prices, and models incorporating assumptions that reflect reality are much more difficult to work with, requiring simulation and the analysis in limiting cases to determine a good enough answer.
-Assumptions of normality—at best—hold on small time scales, perhaps an investigation into intraday or even intrahour price action could give something more fruitful for this analysis.
+Assumptions of normality—at best—hold on small time scales, perhaps an investigation into intraday or even intrahour price action could give something more fruitful.
 
 # Local Variables:
 # compile-command: "pandoc -s -o MiniProject2.ipynb MiniProject2.org -V header-includes='<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>'"
