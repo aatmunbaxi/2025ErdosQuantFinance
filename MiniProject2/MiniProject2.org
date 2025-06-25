@@ -44,54 +44,55 @@ log_returns = np.log((1+sp500["SP500 Returns"]).dropna())
 
 #+RESULTS:
 
-* Heuristic Checks for Normality
+* Visual Checks for Normality
+As a reminder to ourselves, we plot a normal distribution.
+#+begin_src jupyter-python :session MiniProject2 :results value :exports both
+from scipy.stats import probplot
+
+x = np.random.normal(0,1,(100000))
+plt.hist(x,bins=100,color="black")
+plt.title("Normal Distribution")
+plt.show()
+#+end_src
+
+#+RESULTS:
+[[file:./.ob-jupyter/fb1305854563b54a71874fc6a330edee62da72fb.png]]
+
+
+#+begin_src jupyter-python :session MiniProject2 :results value :exports both
+probplot(x,plot=plt)
+plt.title("Normal Distribution QQ Plot")
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: Text(0.5, 1.0, 'Normal Distribution QQ Plot')
+[[file:./.ob-jupyter/9b9ba4a56d572d44a74b1753d6c6cc3f952c8ece.png]]
+:END:
+
 As a preliminary look, we can look at the distribution of daily returns.
 #+begin_src jupyter-python :exports both :session MiniProject2
-log_returns.plot(kind="hist",
-                          bins = 100,
-                          xlabel="Logdaily Returns",
-                          ylabel="Observations",
-                          title="Distribution of Logdaily S&P 500 Returns")
+f,ax = plt.subplots(1,2,figsize=(16,8))
+ax[0].hist(log_returns,bins=100)
+ax[0].set_title("Logdaily Returns")
+ax[0].set_xlabel("Log Return")
+ax[0].set_ylabel("Observations")
+ax[0].set_xlim((-0.1,0.1))
+probplot(log_returns,plot=ax[1])
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: <Axes: title={'center': 'Distribution of Logdaily S&P 500 Returns'}, xlabel='Logdaily Returns', ylabel='Observations'>
-[[file:./.ob-jupyter/d3d96040bfda34dd4a8ca676cd043ddb8e7835a8.png]]
+| array      | ((-4.11049211 -3.90090139 -3.78648197 ... 3.78648197 3.90090139 4.11049211) shape= (35112)) | array      | ((-0.22821587 -0.13783062 -0.11588232 ... 0.11763473 0.13558058 0.15141923) shape= (35112)) |            |                      |
+| np.float64 | (0.01038358253596454)                                                                       | np.float64 | (0.00036322570039683705)                                                                    | np.float64 | (0.9388073761927019) |
+[[file:./.ob-jupyter/8da172e847538984ae8b9f9f10b70ab9626445a6.png]]
 :END:
 
-A visual inspection is far from sufficient for a test of normality.
-We can first "zoom in" to the zero point to viseually cut out the outliers of log returns of absolute magnitude \(> 0.10\).
+Compared to our control plots, the distributions is far from normal, particularly from the tail ends.
+We  can more thoroughly investigate the outliers.
+
 
 #+begin_src jupyter-python :exports both :session MiniProject2
-log_returns.plot(kind="hist",
-                          bins = 100,
-                          xlabel="Log Returns",
-                          ylabel="Observations",
-                          xlim=(-.1,.1),
-                          title="Distribution of Logdaily S&P 500 Returns")
-#+end_src
-
-#+RESULTS:
-:RESULTS:
-: <Axes: title={'center': 'Distribution of Logdaily S&P 500 Returns'}, xlabel='Log Returns', ylabel='Observations'>
-[[file:./.ob-jupyter/89bcc20773c776222a04ee00d7b5df0fcf488715.png]]
-:END:
-
-We first note that the distribution appears negatively skewed, with the left tail being fatter than the right tail.
-We can verify this empirically
-#+begin_src jupyter-python :exports both :session MiniProject2
-log_returns.skew()
-#+end_src
-
-#+RESULTS:
-: np.float64(-0.43940576052749036)
-
-Indeed, the distribution is negatively skewed.
-The value of skewness alone gives us a hint that the data are not normally distributed.
-
-#+begin_src jupyter-python :exports both :session MiniProject2
-# pd.DataFrame(log_returns).boxplot()
 sns.boxplot(log_returns)
 #+end_src
 
@@ -101,30 +102,76 @@ sns.boxplot(log_returns)
 [[file:./.ob-jupyter/fe334de74dd34080bd4d07edd7c9b521b3c62303.png]]
 :END:
 
-The vast majority of the log return values seem to lie in the interval \((-0.10,0.10)\).
+The vast majority of the log return values seem to lie in the interval \((-0.05,0.05)\).
 This is the range we will inspect.
 #+begin_src jupyter-python :exports both :session MiniProject2
-clamped=pd.DataFrame(log_returns[(log_returns <= 0.1) & (log_returns >= -0.1) ])
-sns.boxplot(clamped)
+clamped=pd.DataFrame(log_returns[(log_returns <= 0.05) & (log_returns >= -0.05) ])
+clamped = clamped["SP500 Returns"]
+f,ax = plt.subplots(1,2,figsize=(16,8))
+ax[0].hist(clamped,bins=100)
+ax[0].set_title("Logdaily Returns in [-0.05,0.05]")
+ax[0].set_xlabel("Log Return")
+ax[0].set_ylabel("Observations")
+ax[0].set_xlim((-0.05,0.05))
+probplot(clamped,plot=ax[1])
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: <Axes: >
-[[file:./.ob-jupyter/5e93f2bc90da8bd2719b0dc12878af0a509e0a7f.png]]
+| array      | ((-4.10935154 -3.89970564 -3.78525389 ... 3.78525389 3.89970564 4.10935154) shape= (34939)) | array      | ((-0.0499727 -0.04931548 -0.04908575 ... 0.04881037 0.04915271 0.04929349) shape= (34939)) |            |                      |
+| np.float64 | (0.009595327211446732)                                                                      | np.float64 | (0.00040680457109448564)                                                                   | np.float64 | (0.9780540593602518) |
+[[file:./.ob-jupyter/176b030a0dced7a85d989a5f24555a3bc5a311f5.png]]
 :END:
 
-The boxplot still shows signs of negative skewness, but we can check if the magnitude of skewness is less than what we started with.
-#+begin_src jupyter-python :exports both :session MiniProject2
-clamped.skew()
+Despite the good looking histogram, the probability plot says otherwise, the data are not normally distributed even when focusing on a small interval of log returns.
+
+
+Let's take a look at some other stocks' total history of returns.
+#+begin_src jupyter-python :session MiniProject2 :results value :exports both
+ko = csv_to_series("./KO.csv")
+log_ko = np.log(1+ko["KO Returns"]).dropna()
+log_gis = np.log(1+csv_to_series("./GIS.csv")["GIS Returns"]).dropna()
+log_xlu = np.log(1+csv_to_series("./XLU.csv")["XLU Returns"]).dropna()
+log_mcd = np.log(1+csv_to_series("./MCD.csv")["MCD Returns"]).dropna()
+log_dfsvx = np.log(1+csv_to_series("../MiniProject1/DFSVX-returns.csv")["DFSVX Returns"]).dropna()
+log_disvx = np.log(1+csv_to_series("../MiniProject1/DISVX-returns.csv")["DISVX Returns"]).dropna()
+all_stocks = pd.concat([log_returns,log_ko,log_gis,log_mcd,log_dfsvx,log_disvx],axis=1)
+tickers = ["S&P 500","KO","GIS","MCD","DFSVX","DISVX"]
+all_stocks = all_stocks.set_axis(tickers, axis=1)
 #+end_src
 
 #+RESULTS:
-: SP500 Returns   -0.330623
-: dtype: float64
 
-The skewness does decrease in magnitude, but its value still indicates a distribution far from normal.
-It seems daily returns are too negatively skewed to recover a distribution that is normal.
+
+#+begin_src jupyter-python :session MiniProject2 :results value :exports both
+import seaborn as sns
+n = len(tickers)
+
+for (i,k) in enumerate(tickers):
+    f,ax = plt.subplots(1,2,figsize=(20,4))
+    ax[0].set_title(f"{k} Logdaily Returns")
+    ax[0].set_xlabel(f"Log Return")
+    ax[0].set_ylabel("Observations")
+    ax[0].set_xlim((-0.1,0.1))
+    sns.histplot(all_stocks[k].dropna(),ax=ax[0])
+    probplot(all_stocks[k].dropna(),plot=ax[1])
+    ax[1].set_title(f"{k} Probability Plot")
+    plt.show()
+
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+[[file:./.ob-jupyter/e0507c4150c789f4d47050f97379e452631d156f.png]]
+[[file:./.ob-jupyter/e0a68a90537f62b00b397dedccc32bc11d747316.png]]
+[[file:./.ob-jupyter/c76e76d06a6675eaf6bb21dac0a64ac456ee1ebd.png]]
+[[file:./.ob-jupyter/aa7665d59fe54f7169a852940c299991cc4c81b9.png]]
+[[file:./.ob-jupyter/f24e96f8a1ca1bfc7fc59579d3d5e994a3451b20.png]]
+[[file:./.ob-jupyter/3ec04b161efae7b870d015c8747d47d2a4a5732b.png]]
+:END:
+
+Though the distributions look somewhat clean, the probability plots indicate deviation around the tails.
+KO looks to display the closest behavior to normality among the stocks chosen.
 * Formal Tests for Normality
 So far, our tests for normality has been heuristic in nature.
 There are formal tests for normality such as she Shapiro-Wilk test, which we can employ.
@@ -132,90 +179,451 @@ Below is the resulting \(p\) values extracted from the test, where the null hypo
 #+begin_src jupyter-python :exports both :session MiniProject2
 from scipy.stats import shapiro, normaltest
 names = ["Logdaily", "Logweekly","Logmonthly","Logyearly"]
-weekly_logs = log_returns.groupby(pd.Grouper(freq="W-MON")).agg("sum")
-monthly_logs = log_returns.groupby(pd.Grouper(freq="ME")).agg("sum")
-yearly_logs = log_returns.groupby(pd.Grouper(freq="YE")).agg("sum")
 
-vars = [log_returns,weekly_logs,monthly_logs,yearly_logs]
-results = {x[0]: float(shapiro(x[1])[1]) for x in zip(names,vars)}
-for res in results:
-    print(f"Shapiro-Wilk {res} return p-value: {results[res]}")
+weekly_logs = all_stocks.groupby(pd.Grouper(freq="W-MON")).agg("sum")
+monthly_logs = all_stocks.groupby(pd.Grouper(freq="ME")).agg("sum")
+yearly_logs = all_stocks.groupby(pd.Grouper(freq="YE")).agg("sum")
+
+vars = [all_stocks,weekly_logs,monthly_logs,yearly_logs]
+results = {"Ticker":tickers}
+results.update({time: shapiro(var,axis=0,nan_policy='omit')[1] for time,var in zip(names,vars)})
+
+shap_results = pd.DataFrame(data=results)
+shap_results.set_index("Ticker")
 #+end_src
 
 #+RESULTS:
-: Shapiro-Wilk Logdaily return p-value: 3.818543836005726e-93
-: Shapiro-Wilk Logweekly return p-value: 1.178035812533499e-52
-: Shapiro-Wilk Logmonthly return p-value: 1.2008592564652523e-28
-: Shapiro-Wilk Logyearly return p-value: 0.00021204832741650683
-: /nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:586: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 35112.
-:   res = hypotest_fun_out(*samples, **kwds)
-: /nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:586: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 7316.
-:   res = hypotest_fun_out(*samples, **kwds)
+:RESULTS:
+#+begin_example
+/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 35112.
+  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
+/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 15967.
+  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
+/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 10590.
+  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
+/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 13980.
+  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
+/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 8119.
+  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
+/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:634: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 7654.
+  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
+/nix/store/7w7xpfla1a739qdvjn80wb04kkpz1f79-python3.12-scipy-1.15.2/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:657: UserWarning: scipy.stats.shapiro: For N > 5000, computed p-value may not be accurate. Current N is 7319.
+  return result_to_tuple(hypotest_fun_out(*samples, **kwds), n_out)
+#+end_example
+#+begin_export html
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Logdaily</th>
+      <th>Logweekly</th>
+      <th>Logmonthly</th>
+      <th>Logyearly</th>
+    </tr>
+    <tr>
+      <th>Ticker</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>S&amp;P 500</th>
+      <td>3.818544e-93</td>
+      <td>1.133519e-52</td>
+      <td>1.163160e-28</td>
+      <td>2.120483e-04</td>
+    </tr>
+    <tr>
+      <th>KO</th>
+      <td>1.859133e-66</td>
+      <td>3.983645e-74</td>
+      <td>5.771239e-44</td>
+      <td>3.938358e-14</td>
+    </tr>
+    <tr>
+      <th>GIS</th>
+      <td>1.312791e-53</td>
+      <td>4.232199e-83</td>
+      <td>3.605169e-49</td>
+      <td>9.240974e-17</td>
+    </tr>
+    <tr>
+      <th>MCD</th>
+      <td>3.644711e-63</td>
+      <td>1.821012e-78</td>
+      <td>1.682117e-45</td>
+      <td>7.616876e-16</td>
+    </tr>
+    <tr>
+      <th>DFSVX</th>
+      <td>6.241495e-56</td>
+      <td>7.526820e-89</td>
+      <td>2.851575e-55</td>
+      <td>3.960046e-18</td>
+    </tr>
+    <tr>
+      <th>DISVX</th>
+      <td>2.801857e-54</td>
+      <td>1.195344e-89</td>
+      <td>5.262735e-56</td>
+      <td>3.336761e-19</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+#+end_export
+:END:
 In every performance of the Shapiro-Wilk test, the resulting \(p\) value is decidedly below \(0.05\), so in every case we reject the null hypothesis that the data are normally distributed.
 
 On the other hand, the =normaltest= from =scipy.stats= uses skewness and kurtosis to compare against a normal distribtution.
 
 #+begin_src jupyter-python :exports both :session MiniProject2
-print(f"p-values; skewness-kurtosis test:\n{normaltest(pd.concat([log_returns, weekly_logs, monthly_logs,yearly_logs],axis=1),nan_policy='omit',axis=0).pvalue}")
+normal_results = {"Ticker":tickers}
+normal_results.update({time: normaltest(var,axis=0,nan_policy='omit')[1] for time,var in zip(names,vars)})
+
+normal_results = pd.DataFrame(data=normal_results)
+normal_results.set_index("Ticker")
 #+end_src
 
 #+RESULTS:
-: p-values; skewness-kurtosis test:
-: [0.00000000e+00 0.00000000e+00 2.01874396e-72 5.74204997e-06]
+#+begin_export html
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
-In this test, too, there is sufficient evidence to reject the hypothesis that the data are normaly distributed at all sampled time scales.
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
 
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Logdaily</th>
+      <th>Logweekly</th>
+      <th>Logmonthly</th>
+      <th>Logyearly</th>
+    </tr>
+    <tr>
+      <th>Ticker</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>S&amp;P 500</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.745658e-72</td>
+      <td>5.742050e-06</td>
+    </tr>
+    <tr>
+      <th>KO</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.499141e-72</td>
+      <td>1.681979e-07</td>
+    </tr>
+    <tr>
+      <th>GIS</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>6.248636e-71</td>
+      <td>2.118837e-13</td>
+    </tr>
+    <tr>
+      <th>MCD</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.698201e-64</td>
+      <td>1.974224e-13</td>
+    </tr>
+    <tr>
+      <th>DFSVX</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>6.168767e-202</td>
+      <td>1.172188e-12</td>
+    </tr>
+    <tr>
+      <th>DISVX</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>6.035076e-179</td>
+      <td>4.315898e-10</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+#+end_export
+
+In actuality, the formal tests aren't very applicable here.
+Hypothesis testing with large amounts of data (\(n > 300\)) becomes extremely sensitive to small deviations against the null hypothesis
+In our case, this manifests itself in extremely small \(p\) values, and warnings raised with the testing functions that these \(p\) values may be innacurate.
+With large amounts of data, it becomes feasible to check things visually on QQ plots and histograms, which we did and concluded deviation from normality anyway.
 * Testing Particular Bull Markets
-We can selectively pick periods of time where volatility is lower, which typically happens during bull markets
+We can selectively pick periods of time where volatility is typically lower, which typically happens during bull markets
 We first examine the longest bull market in US history: the period between December 1987 and March 2000
 #+begin_src jupyter-python :exports both :session MiniProject2
 start, end = ("1987-12-01","2000-03-01")
-log_returns[start:end].plot(kind="hist",bins=50,xlabel="Log Daily Returns")
+for (i,k) in enumerate(tickers):
+    f,ax = plt.subplots(1,2,figsize=(20,4))
+    ax[0].set_title(f"{k} Logdaily Returns 1988-2000")
+    ax[0].set_xlabel(f"Log Return")
+    ax[0].set_ylabel("Observations")
+    ax[0].set_xlim((-0.1,0.1))
+    sns.histplot(all_stocks[k][start:end].dropna(),ax=ax[0])
+    probplot(all_stocks[k][start:end].dropna(),plot=ax[1])
+    ax[1].set_title(f"{k} Probability Plot")
+    plt.show()
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: <Axes: xlabel='Log Daily Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/4562bfd97122c54278ffd2b558102cb4786104d5.png]]
+[[file:./.ob-jupyter/755146ae1d58cc008532ebefb3c10e9a7dc4f210.png]]
+[[file:./.ob-jupyter/060c650ad3038aae618712fc0c25721ab47a2710.png]]
+[[file:./.ob-jupyter/7a794d0623f95853ee12e8c94f716f716fd943e8.png]]
+[[file:./.ob-jupyter/fcb697815ef2110c0b9269eea6040b272f4ab421.png]]
+[[file:./.ob-jupyter/5fc944e877274870896ca5af856592767bbf3849.png]]
+[[file:./.ob-jupyter/325f81092c33b32ca8231a0261f4bfa2c04fea35.png]]
 :END:
 
-Looking at the distribution of daily returns, we can already see a thinning of the tails, though the daily returns still appear negatively distributed.
-We investigate the \(p\) value of the formal Shapiro-Wilk test on the monthly returns during this bull market.
-#+begin_src jupyter-python :exports both :session MiniProject2
-print(f"p = {normaltest(monthly_logs[start:end])[1]}")
+Though the asset wasn't around for the full period, DISVX and GIS show improvements in their QQ plots, indicating this period might show signs of normal returns.
+
+#+begin_src jupyter-python :session MiniProject2 :results value :exports both
+bull_results = {"Ticker":tickers}
+bull_results.update({time: shapiro(var[start:end],axis=0,nan_policy='omit')[1] for time,var in zip(names,vars)})
+
+bull_results = pd.DataFrame(data=bull_results)
+bull_results.set_index("Ticker")
 #+end_src
 
 #+RESULTS:
-: p = 0.06689875527159461
+#+begin_export html
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
-With a tolerance of \(p = 0.05\), there is not sufficient evidence to reject the null hypothesis that the data is normally distributed.
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
 
-We will see later why this is an impressive result.
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Logdaily</th>
+      <th>Logweekly</th>
+      <th>Logmonthly</th>
+      <th>Logyearly</th>
+    </tr>
+    <tr>
+      <th>Ticker</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>S&amp;P 500</th>
+      <td>5.281631e-33</td>
+      <td>1.608250e-13</td>
+      <td>0.001171</td>
+      <td>0.533628</td>
+    </tr>
+    <tr>
+      <th>KO</th>
+      <td>2.794090e-29</td>
+      <td>1.088972e-11</td>
+      <td>0.149627</td>
+      <td>0.621777</td>
+    </tr>
+    <tr>
+      <th>GIS</th>
+      <td>1.024150e-33</td>
+      <td>2.745457e-08</td>
+      <td>0.028857</td>
+      <td>0.041571</td>
+    </tr>
+    <tr>
+      <th>MCD</th>
+      <td>1.011819e-29</td>
+      <td>5.083932e-08</td>
+      <td>0.344817</td>
+      <td>0.613485</td>
+    </tr>
+    <tr>
+      <th>DFSVX</th>
+      <td>2.551790e-29</td>
+      <td>2.564002e-07</td>
+      <td>0.199569</td>
+      <td>0.207291</td>
+    </tr>
+    <tr>
+      <th>DISVX</th>
+      <td>1.175701e-28</td>
+      <td>5.759110e-06</td>
+      <td>0.006312</td>
+      <td>0.608427</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+#+end_export
+The logmonthly returns appear to show possible signs of normality, and this possibility only increases as you expand your time horizon.
+
 It is quite difficult to find periods of time where the log returns show any evidence at all of being normally distributed, and \(3+13\ast 12 = 159\) logmonthly observations in this period would normally be enough to provide evidence against normality, but this particular bull market seems to show promise.
 
 Let us investigate the second longest bull market spanning from March 2009 to February 2020.
 #+begin_src jupyter-python :exports both :session MiniProject2
 start, end = ("2009-03-01", "2020-02-01")
-log_returns[start:end].plot(kind="hist",bins=50,xlabel="Log Daily Returns",
-                            title="Log Daily Returns Mar 2009-Feb 2020")
+bull2_results = {"Ticker":tickers}
+bull2_results.update({time: shapiro(var[start:end],axis=0,nan_policy='omit')[1] for time,var in zip(names,vars)})
+
+bull2_results = pd.DataFrame(data=bull_results)
+bull2_results.set_index("Ticker")
+#+end_src
+
+#+RESULTS:
+#+begin_export html
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Logdaily</th>
+      <th>Logweekly</th>
+      <th>Logmonthly</th>
+      <th>Logyearly</th>
+    </tr>
+    <tr>
+      <th>Ticker</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>S&amp;P 500</th>
+      <td>5.281631e-33</td>
+      <td>1.608250e-13</td>
+      <td>0.001171</td>
+      <td>0.533628</td>
+    </tr>
+    <tr>
+      <th>KO</th>
+      <td>2.794090e-29</td>
+      <td>1.088972e-11</td>
+      <td>0.149627</td>
+      <td>0.621777</td>
+    </tr>
+    <tr>
+      <th>GIS</th>
+      <td>1.024150e-33</td>
+      <td>2.745457e-08</td>
+      <td>0.028857</td>
+      <td>0.041571</td>
+    </tr>
+    <tr>
+      <th>MCD</th>
+      <td>1.011819e-29</td>
+      <td>5.083932e-08</td>
+      <td>0.344817</td>
+      <td>0.613485</td>
+    </tr>
+    <tr>
+      <th>DFSVX</th>
+      <td>2.551790e-29</td>
+      <td>2.564002e-07</td>
+      <td>0.199569</td>
+      <td>0.207291</td>
+    </tr>
+    <tr>
+      <th>DISVX</th>
+      <td>1.175701e-28</td>
+      <td>5.759110e-06</td>
+      <td>0.006312</td>
+      <td>0.608427</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+#+end_export
+
+The results show largely the same trends, with the minutae differing slightly.
+Out of interest, we plot the distributions and QQ plots of this bull market as well.
+#+begin_src jupyter-python :session MiniProject2 :results value :exports both
+for (i,k) in enumerate(tickers):
+    f,ax = plt.subplots(1,2,figsize=(20,4))
+    ax[0].set_title(f"{k} Logdaily Returns 2009-2020")
+    ax[0].set_xlabel(f"Log Return")
+    ax[0].set_ylabel("Observations")
+    ax[0].set_xlim((-0.1,0.1))
+    sns.histplot(all_stocks[k][start:end].dropna(),ax=ax[0])
+    probplot(all_stocks[k][start:end].dropna(),plot=ax[1])
+    ax[1].set_title(f"{k} Probability Plot")
+    plt.show()
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: <Axes: title={'center': 'Log Daily Returns Mar 2009-Feb 2020'}, xlabel='Log Daily Returns', ylabel='Frequency'>
-[[file:./.ob-jupyter/5b4f189bacc8d07a251a1befbe4e44cfb7cc1e16.png]]
+[[file:./.ob-jupyter/547823343888bc6062e92bac3b0bccfd09a1df4b.png]]
+[[file:./.ob-jupyter/4c2eba2288feba64f2c413ca89be017d88d12551.png]]
+[[file:./.ob-jupyter/eb6fe0d6d2a8239a58d4122f43502a6028bc8934.png]]
+[[file:./.ob-jupyter/ee60b73366f1d4bd34213d27feb97a44823e1f49.png]]
+[[file:./.ob-jupyter/63920370affcfe47ff94fa8671e2deaa86c683aa.png]]
+[[file:./.ob-jupyter/6cb1457c78ae3c6bda4052dbce364f0303194724.png]]
 :END:
 
-This time, the left tail is much fatter than the previous bull market under examination.
-#+begin_src jupyter-python :exports both :session MiniProject2
-print(f"p = {normaltest(monthly_logs[start:end])[1]}")
-#+end_src
-
-#+RESULTS:
-: p = 0.007993736572718346
-
-This bull market instead does show evidence against normality.
 * Individual Stocks
 We should not expect it to be easy to construct a portfolio of stocks (i.e. equities) with lognormal returns over a significant period of time.
 Equities are inherently riskier than other financial assets like bonds, and show fatter tails in distributions of historical returns on virtually all time scales.
@@ -224,12 +632,6 @@ Since we are interested in stocks only, we will work within the confines of equi
 
 We hypothesize that a diverse portfolio is the wrong way to mine logreturns that might be normal.
 Instead, we look at a particular individual stock in the consumer staple sector, Coca-Cola (KO).
-#+begin_src jupyter-python :session MiniProject2 :exports both
-ko = csv_to_series("./KO.csv")
-log_ko = np.log(1+ko["KO Returns"])
-#+end_src
-
-#+RESULTS:
 
 
 #+begin_src jupyter-python :session MiniProject2 :exports both
@@ -248,7 +650,6 @@ The reason is the log price seems to dither around the same price, indicating a 
 We should want more zero-mean log returns to have any hope of finding such a period with normally distributed returns.
 #+begin_src jupyter-python :session MiniProject2 :exports both
 s1,s2 = ("1995-04-01","1996-04-01")
-from scipy.stats import probplot
 
 probplot(log_ko[s1:s2],plot=plt)
 plt.title(f"KO logdaily returns: {s1}—{s2}")
@@ -259,16 +660,16 @@ plt.show()
 [[file:./.ob-jupyter/2947d8f411db19bfd47d031483b3c91799579d2d.png]]
 
 #+begin_src jupyter-python :session MiniProject2 :exports both
-log_ko[s1:s2].plot(kind="hist",bins=80)
+f,ax = plt.subplots(1,2,figsize=(16,8))
+sns.histplot(log_ko[s1:s2],ax=ax[0],kde=True)
+probplot(log_ko[s1:s2],plot=ax[1])
+plt.show()
 #+end_src
 
 #+RESULTS:
-:RESULTS:
-: <Axes: ylabel='Frequency'>
-[[file:./.ob-jupyter/0a60e675592a04853c1a22e456364522a824c0db.png]]
-:END:
+[[file:./.ob-jupyter/4c3152d077475f27d87d47866a8c0fed8243c24a.png]]
 
-Apart from the distribution of logdaily returns looking more favorable than our other assets, we can check the skewness and kurtosis:
+Apart from the distribution and QQ plot of logdaily returns looking more favorable than our other assets, we can check with a rigorous hypothesis test:
 #+begin_src jupyter-python :session MiniProject2 :exports both
 print(f"KO logreturns 04/1995-04/1996 p-value: {normaltest(log_ko[s1:s2])[1]}")
 #+end_src
@@ -297,15 +698,13 @@ for x in periods:
 #+end_src
 
 #+begin_src jupyter-python :session MiniProject2 :results value :exports both
-plt.bar(x=period_names,height=percent_rejected)
+sns.barplot(x=period_names,y=percent_rejected)
 plt.title("% Rejection of Normality. Rolling Periods of Logdaily S&P500 Returns")
+plt.show()
 #+end_src
 
 #+RESULTS:
-:RESULTS:
-: Text(0.5, 1.0, '% Rejection of Normality. Rolling Periods of Logdaily S&P500 Returns')
-[[file:./.ob-jupyter/338c0f56d270b77fd4cf8264cdcd27312a958fea.png]]
-:END:
+[[file:./.ob-jupyter/bb31ae031a2c1751aa0d9b9c161d4b1816d96f85.png]]
 The graph gives an interpretation as follows: *given any particular yearly period of logdaily S&P500 returns, there is a ~80% chance that this period shows enough evidence to reject the hypothesis that the data are normally distributed.*
 In other words, only 20% of rolling yearly periods of logdaily returns show potential to be normally distributed.
 Chances of finding potential for normality increase as your time window shrinks.
@@ -321,7 +720,7 @@ for x in periods:
     ko_percent_normal = 100* len(rolled_ps[rolled_ps< 0.05]) / len(rolled_ps)
     ko_percent_rejected.append(ko_percent_normal)
 
-plt.bar(x=period_names,height=ko_percent_rejected)
+sns.barplot(x=period_names,y=ko_percent_rejected)
 plt.title("% Rejection of Normality. Rolling Periods of Logdaily KO Returns")
 #+end_src
 
@@ -401,9 +800,10 @@ In all of our tested data, between 40%-65% of any contiguous semiannual periods 
 ~80%+ of contiguous yearly windows of logdaily returns show strong evidence against normality, with that number increasing as you look for longer windows.
 In other words, searching for normally distributed returns over any significant period of time is a coin flip at best, or a losing game at worst (in our data at least).
 
-We can conclude that finding normally distributed returns in stocks is *essentially an exercise in arbitrary data mining*, and the pattern fails far more often than it succeeds.
+We can conclude that finding normally distributed returns over long periods of time is *essentially an exercise in arbitrary data mining*, and the pattern fails far more often than it succeeds.
 Though, this is the point of this exercise: the assumption of normal stock returns in various financial models such as Black-Scholes is not borne out in reality, and this illustrates that plainly.
 The essence of assuming lognormal returns is simply a convenience to find closed form solutions to option prices, and models incorporating assumptions that reflect reality are much more difficult to work with, requiring simulation and the analysis in limiting cases to determine a good enough answer.
+Assumptions of normality—at best—hold on small time scales, perhaps an investigation into intraday or even intrahour price action could give something more fruitful for this analysis.
 
 # Local Variables:
 # compile-command: "pandoc -s -o MiniProject2.ipynb MiniProject2.org -V header-includes='<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>'"
