@@ -5,7 +5,7 @@ Explore the impact of a non-constant volatility term \(\sigma \) on the distribu
 You are encouraged to research and explore a \(\sigma \) hedging stategy and write code that simulates the profit distribution of the \(\sigma \) hedging strategy
 
 * Given Code
-#+begin_src jupyter-python :session MiniProject4 :exports both :results value
+#+begin_src jupyter-python :session MiniProject4 :exports both :results none
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,7 +13,7 @@ import seaborn as sns
 sns.set_style('darkgrid')
 #+end_src
 
-#+begin_src jupyter-python :session MiniProject4 :exports both :results value
+#+begin_src jupyter-python :session MiniProject4 :exports code :results none
 def stock_path_custom_sigma(S0, t, r, mu, n_paths, n_steps):
     '''
     Generation of custom stock paths following Geometeric Brownian motion,
@@ -93,7 +93,7 @@ plt.show()
 We simply set up our Monte Carlo simulation functions to accept generic functions that product stock price paths, and price the options and estimate delta accordingly.
 We then adapt the function to simulate of delta hedging to use the generic pricer and delta computer.
 ** Monte Carlo Options Pricer
-#+begin_src jupyter-python :session MiniProject4 :exports both :results value
+#+begin_src jupyter-python :session MiniProject4 :exports code :results none
 def mc_pricer(S0,T,n_paths,n_steps,K,path_gen,callput, **kwargs):
     """
     Monte-Carlo pricer with generic stock path generator.
@@ -132,7 +132,7 @@ def mc_pricer(S0,T,n_paths,n_steps,K,path_gen,callput, **kwargs):
 #+end_src
 ** Monte Carlo Option Delta
 We use the Monte Carlo option pricer to estimate option delta using the second order finite difference estimation.
-#+begin_src jupyter-python :session MiniProject4 :exports both :results value
+#+begin_src jupyter-python :session MiniProject4 :exports code :results none
 def mc_delta(S0, T,delta_sims,K,path_gen,callput,**kwargs):
     """
     Monte Carlo estimation of Black-Scholes call deltas for an array of spot prices
@@ -192,7 +192,7 @@ In the absence of a rigorous convergence analysis for the Monte Carlo pricer, we
 
 
 ** Selling options with hedging
-#+begin_src jupyter-python :session MiniProject4 :results value :exports both
+#+begin_src jupyter-python :session MiniProject4 :results none :exports code
 def mc_hedge_profits(S0, T, n_sims,n_steps,delta_sims , n_hedges, K, path_gen, callput, **kwargs):
 
     """Description
@@ -260,7 +260,7 @@ def mc_hedge_profits(S0, T, n_sims,n_steps,delta_sims , n_hedges, K, path_gen, c
 
 * Distributions of \(\Delta \) Hedge Profits
 We establish a consistent set of parameters common to all of our tests, so that the only factors should be the volatility models we use.
-#+begin_src jupyter-python :session MiniProject4 :results value :exports both
+#+begin_src jupyter-python :session MiniProject4 :results none :exports code
 from joblib import Parallel, delayed
 
 # Selling 1Y 110C @ spot 100
@@ -291,7 +291,7 @@ hedge_nums = [5, 50, 126,252]
 
 **  Constant Volatility
 To establish a control for what we should compare our profit/loss distributions against, we will model a portfolio of selling calls with delta hedging \(N\) times on a stock with risk-neutral drift with constant volatility.
-#+begin_src jupyter-python :session MiniProject4 :exports both :results value
+#+begin_src jupyter-python :session MiniProject4 :exports code :results none
 def stock_path_constant_sigma(S0, t, n_paths, n_steps, **kwargs):
     '''
     Inputs:
@@ -348,7 +348,7 @@ def stock_path_constant_sigma(S0, t, n_paths, n_steps, **kwargs):
 
 #+RESULTS:
 
-#+begin_src jupyter-python :session MiniProject4
+#+begin_src jupyter-python :session MiniProject4 :exports both
 def plot_paths(paths,title):
     plt.title(title)
     for path in paths:
@@ -362,7 +362,7 @@ plot_paths(paths,f"Simulated Paths; Constant volatility $\\sigma = {sigma}$")
 #+end_src
 
 #+RESULTS:
-[[file:./.ob-jupyter/a3eeda8de761557826227e27538526828290e6bf.png]]
+[[file:./.ob-jupyter/50c0462eeab696c58720327e05837635bec39a90.png]]
 
 
 
@@ -402,7 +402,7 @@ The (Euler-Maruyama) discretized CEV dynamics obey
 \[S_t = S_t + \mu S_{t-1}\tau  + \sigma S^{\gamma }_{t-1} \sqrt{\tau } Z_t \]
 where \(\sigma,\gamma  \geqslant 0 \) and \(\mu  \) is a drift term and \(\tau  = \frac{T}{n}\).
 Note that at \(\gamma =1\), the dynamics match that of geometric Brownian motion.
-#+begin_src jupyter-python :session MiniProject4 :results value :exports both
+#+begin_src jupyter-python :session MiniProject4 :results none :exports both
 def cev_path(S0,T,n_paths,n_steps,**kwargs):
     gamma = kwargs["gamma"]
     sigma = kwargs["sigma"]
@@ -606,7 +606,7 @@ Because we are modelling forward movements of stocks, we will be choosing them s
 
 Since this model is inherently recursive, vectorizing it will unfortunately not be an option.
 The function can take either a single spot price, or a list/array of spot prices, and will simulate =n_paths= for each spot price.
-#+begin_src jupyter-python :session MiniProject4 :exports both :results value
+#+begin_src jupyter-python :session MiniProject4 :exports code :results none
 def GARCH11_paths(S0, t, n_paths, n_steps,**kwargs):
     '''
     Generation of custom stock paths following Geometeric Brownian motion,
