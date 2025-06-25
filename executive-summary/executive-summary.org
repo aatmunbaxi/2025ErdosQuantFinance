@@ -1,0 +1,32 @@
+#+title: Project Executive Summary
+#+setupfile: ~/Documents/org/latex_template.org
+
+The completion of these mini projects concludes a broad education on general topics of quantitative finance.
+In mini project 1, we took the perspective of a long term investor to fund consumption in the far future.
+We treated a traditionally aggressive allocation of 90/10 stocks/bonds as a "low risk" portfolio, and analyzed it against a portfolio that the Fama-French 3 factor model considers higher risk, concentrating more of the stock position in small cap value (SCV) equities.
+
+From the perspective of behavioral risk and Fama-French size and value factors, the latter portfolio justifies its high risk name, due to long periods of SCV underperformance and tracking error, making it a less stomach-able portfolio than the lower risk one.
+However, in traditional risk metrics such like volatility, we found the concentration in uncorrelated assets resulted in a decrease in historical volatility, despite the superior historical returns and addition of more volatile assets.
+
+In mini project 2, we scrutinized the assumption that equity returns are normally distributed, focusing on the historical daily log returns of a variety of stocks and indexes.
+We placed particular emphasis on visual tests for normality due to number of data points, but we looked at how the assumption of normality changes over varying contiguous time scales with formal tests.
+
+At sufficiently long contiguous periods of time, we found it vanishingly unlikely to find a period where logdaily returns were normally distributed.
+It is approximately a coin flip that any 6 month period of logdaily returns on a stock/index exhibits strong evidence to reject normality.
+The data show that assumptions of lognormal returns only make sense on short time scales, and does not make sense as a guiding principle for long term equity returns.
+An investigation on the price action in intraday movements might tell a different story.
+
+In mini project 3, we studied the relationship of the Black-Scholes (BS) option price to the time to expiration and the underlying spot price.
+We discovered the phenomenon of theta decay: the decay of option price as you approach expiration, and found that it was independent of in-the-moneyness (ITMness).
+For dependence on spot price, we found asymptotically linear behavior as ITMness increased, finding that deep ITM options with long dated expirys can act as leveraged exposure to the underlying asset for only the price of the premium paid.
+
+Contextualizing these findings with various options trading strategies, we weighed some of the upsides and downsides of simple single-leg options strategies such as long calls/puts and covered calls/puts, and justified the existence of more complex multi-leg options trading strategies.
+It would be interesting to see how these relationships differ as we instead take simulated option values and greeks, and how they change as we adjust the underlying stock path model based on time-varying volatility, for instance.
+
+In mini project 4, we implemented a variety of stochastic processes—particularly stochastic volatility models—and observed their effects on the distribution of delta hedging returns.
+Of particular note, we adapted the code from the class to create a generic MC pricer function that can accept any stock path generator and returns the simulated option price accordingly, allowing us to test a battery of various models.
+This allowed us to test a battery of dynamics, including constant volatility, constant elasticity of variance, the Hull-White stochastic vol model, GARCH(1,1), and the SABR model.
+Similarly, the functions to simulate delta and hedging profits were adapted, producing a /fully simulated/ delta hedge strategy with all models.
+
+All displayed similar change as you hedge a fully simulated position: the distribution of returns converges to more reliable positive returns with lower chance of catastrophic losses, as in the BS model.
+Avenues to explore further include speeding up the code and rigorous analyses of the simulations, possibly exploring alternative discretizations schemes with better error.
