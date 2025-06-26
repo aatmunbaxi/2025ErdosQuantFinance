@@ -276,7 +276,7 @@ mu = 0.1
 sigma = 0.15
 
 # Number of simulations
-n_sims = 1500
+n_sims = 1000
 
 #  Number of simulations for delta calculations
 delta_sims = 1000
@@ -287,7 +287,14 @@ hedge_nums = [5, 50, 126,252]
 #+end_src
 
 
+All of the following analysis employs the same strategy of selling a single call option with strike \(110\) at a current spot price of \(100\) with \(1\) year to expiration.
+The market conditions are neutral-to-upward trending, as given by a drift value of \(\mu =0.10\).
+For the models that need it, the long run stock volatility is assumed to be \(\sigma =0.15\).
+We simulated the delta at each step 1000 times with 50 steps used to calculate the bumped option prices, employing the central finite difference method to approximate it.
+We vary the number of times we delta hedge at 5, 50, 126, and 252 time over the life of the option, plotting mean profit, max loss, and max profit along with the distribution of returns along the way.
 
+*Note:* This code is *unbearably slow*!
+If anything, it illustrates that although simple models such as the Black-Scholes model assume things that are far from reality, the existence of closed-form solutions is extremely useful for quick computation!
 
 **  Constant Volatility
 To establish a control for what we should compare our profit/loss distributions against, we will model a portfolio of selling calls with delta hedging \(N\) times on a stock with risk-neutral drift with constant volatility.
