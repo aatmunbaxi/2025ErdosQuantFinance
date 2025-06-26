@@ -1,0 +1,176 @@
+#+TITLE: Quantitative Finance Mini Projects
+#+AUTHOR: Aatmun Baxi
+#+OPTIONS:   H:0 num:t toc:nil date:nil
+#+LATEX_CLASS: beamer
+#+LATEX_CLASS_OPTIONS: [presentation]
+#+latex_header:  \institute{2025 Summer Erdos Institute}
+#+BEAMER_THEME: Berlin
+#+beamer_color_theme: structure
+#+COLUMNS: %45ITEM %10BEAMER_ENV(Env) %10BEAMER_ACT(Act) %4BEAMER_COL(Col)
+#+beamer_font_theme:
+* Project 1: Risky Portfolio Construction
+:PROPERTIES:
+:BEAMER_ENV: frame
+:END:
+- Focus on /compensated risks/ and long term outcomes
+- Invest like someone saving for retirement
+\pause
+** Low Risk :B_block:
+    :PROPERTIES:
+    :BEAMER_ENV: block
+    :BEAMER_COL: 0.4
+    :END:
+    90/10 total mkt stocks/bonds
+\pause
+** High Risk :B_block:
+:PROPERTIES:
+:BEAMER_COL: 0.6
+:BEAMER_ENV: block
+:END:
+90/10 with Fama-French size & value factors + Treasury STRIPS
+* Results
+:PROPERTIES:
+:BEAMER_ENV: frame
+:END:
+** columns
+:PROPERTIES:
+:BEAMER_ENV: columns
+:END:
+** left column
+:PROPERTIES:
+:BEAMER_ENV: column
+:BEAMER_COL: 0.4
+:END:
+*** Over/Under Performance :B_block:
+:PROPERTIES:
+:BEAMER_ENV: block
+:END:
+# #+attr_latex: :width 0.5\textwidth
+[[./figures/over-under.png]]
+- \tiny{Tracking error introduces behavioral risk}
+
+** righ column
+:PROPERTIES:
+:BEAMER_ENV: column
+:BEAMER_COL: 0.5
+:END:
+
+
+*** Backtest :B_block:
+:PROPERTIES:
+:BEAMER_ENV: block
+:END:
+#+attr_latex: :width 0.8\textwidth
+[[./figures/backtest.png]]
+
+
+- \tiny{Low risk \(\sigma =0.159\)}
+- \tiny{High risk \(\sigma =0.155\)}
+- \tiny{Traditional risk metrics largely unchanged!}
+\vspace{0.5}
+* Project 2: Assumptions of Lognormal Returns
+:PROPERTIES:
+:BEAMER_ENV: frame
+:END:
+-  Lognormal daily returns are *very rare* over contiguous periods of time
+  - Like a coin flip over rolling 6 month periods
+- Hypothesis testing unreliable with large samples
+
+#+Caption: S&P 500 Log Returns
+#+attr_latex: :width 0.7\textwidth
+  [[./figures/sp500-probplots.png]]
+* Local Behavior of Log Returns
+:PROPERTIES:
+:BEAMER_ENV: frame
+:END:
+#+caption:  S&P 500 Log Returns: 1987/12 to 2000/03
+#+attr_latex: :height 3.5cm :width \textwidth
+[[./figures/sp500-bull-probplot.png]]
+
+* Local Behavior of Individual Stock Log Returns
+:PROPERTIES:
+:BEAMER_ENV: frame
+:END:
+#+caption: KO Log Returns: 1995/04 to 1996/04
+[[./figures/ko-normal.png]]
+
+* Project 3: TTE and Spot Dependence of BS Option Prices
+:PROPERTIES:
+:BEAMER_ENV: frame
+:END:
+- Discovered *theta decay* and options as *leveraged long/short positions*
+
+
+
+** Righ column
+:PROPERTIES:
+:BEAMER_ENV: column
+:BEAMER_COL: 0.5
+:END:
+#+caption: $110C @ $100 spot. Time to Expiration Dependence
+[[./figures/bc-call-tte.png]]
+
+
+** righ col
+:PROPERTIES:
+:BEAMER_COL: 0.5
+:BEAMER_ENV: column
+:END:
+#+caption: $110C @ $100 spot. Spot Dependence
+[[./figures/bc-call-spot.png]]
+
+* Phenomena in Context of Trading Strategies
+:PROPERTIES:
+:BEAMER_ENV: frame
+:END:
+- Theta decay: a double edged sword
+  - *Hurts* option buyers
+  - *Helps* option sellers
+  - Covered calls/puts exploit this theta decay
+  - Justifies multi-leg strategies to protect against losses
+
+
+- Deep ITM options as leveraged  positions
+  - \(|\Delta |\) values close to \(1\) give near equivalent directional exposure to 100x the underlying
+  - Theta decay reduced at long expirys, ergo...
+  - Deep ITM LEAPS get best of \(\Delta \) exposure and least theta decay
+* Project 4: Effects of Volatility Models on \(\Delta \) Hedging
+:PROPERTIES:
+:BEAMER_ENV: frame
+:END:
+** Main Accomplishment
+:PROPERTIES:
+:BEAMER_ENV: block
+:END:
+- Implemented *generic Monte Carlo method* for both options pricing and delta approximation
+- Allowed for a fully simulated \(\Delta \) hedging payoff model
+- Plug-and-play with various stochastic processes
+\pause
+** Models tested
+:PROPERTIES:
+:BEAMER_ENV: block
+:END:
+Constant volatility, constant elasticity of variance (CEV), Hull-White stochastic vol, GARCH(1,1), SABR
+* Some Profit Distributions
+:PROPERTIES:
+:BEAMER_ENV: frame
+:END:
+** left cl
+:PROPERTIES:
+:BEAMER_ENV: column
+:BEAMER_COL: 0.5
+:END:
+#+caption: CEV Profit Distributions
+[[./figures/cev-distribution.png]]
+** righ
+:PROPERTIES:
+:BEAMER_COL: 0.5
+:BEAMER_ENV: column
+:END:
+#+caption: GARCH(1,1) Profit Distributions
+[[./figures/GARCH-distribution.png]]
+* Conclusion
+:PROPERTIES:
+:BEAMER_ENV: frame
+:END:
+Thank you for your attention!
