@@ -496,7 +496,7 @@ zroz = csv_to_series("./ZROZ-returns.csv")[inception:]["ZROZ Returns"]
 
 #+RESULTS:
 We now create a return series for each of our defined portfolios
-#+begin_src jupyter-python :session MiniProject1 :exports code :results none
+#+begin_src jupyter-python :session MiniProject1 :exports code :results value
 p1 = 0.55*vti + 0.35*vxus + 0.1*govt
 p2 = 0.28*vti + 0.27*dfsvx + 0.18*vxus + 0.17*disvx + 0.10*zroz
 #+end_src
@@ -637,14 +637,14 @@ ou.index = ou.index.year
 (100*ou).plot(kind="bar",
               rot = 70,
               title="High Risk Returns - Low Risk Returns",
-              ylabel="%\\Delta$% Return",
+              ylabel="$\\Delta$% Return",
               xlabel="Year")
 #+end_src
 
 #+RESULTS:
 :RESULTS:
-: <Axes: title={'center': 'High Risk Returns - Low Risk Returns'}, xlabel='Year', ylabel='%\\Delta$% Return'>
-[[file:./.ob-jupyter/8540d240f2037dd698e998820485618fcf9982a9.png]]
+: <Axes: title={'center': 'High Risk Returns - Low Risk Returns'}, xlabel='Year', ylabel='$\\Delta$% Return'>
+[[file:./.ob-jupyter/72a1d9f2cb7782eb7ca86a5be4a74ecff1b60cc3.png]]
 :END:
 The difference in returns largely follows the trends we observed with SCV over/underperformance, but the magnitude of over-underperformance is blunted by the inclusion of some total market funds and the bonds to even things out.
 
