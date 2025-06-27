@@ -628,18 +628,9 @@ np.log(ko["KO"]).plot(title="KO Logvalue: $10000 Invested",
 From a visual inspection of the logvalue of an investment in KO, we see that the period between 1995 and 1996 shows promise for lognormal returns, based on intuition alone.
 The reason is the log price seems to dither around the same price, indicating a more normal random choice of up-down movements on the day.
 We should want more zero-mean log returns to have any hope of finding such a period with normally distributed returns.
+
 #+begin_src jupyter-python :session MiniProject2 :exports both
 s1,s2 = ("1995-04-01","1996-04-01")
-
-probplot(log_ko[s1:s2],plot=plt)
-plt.title(f"KO logdaily returns: {s1}—{s2}")
-plt.show()
-#+end_src
-
-#+RESULTS:
-[[file:./.ob-jupyter/2947d8f411db19bfd47d031483b3c91799579d2d.png]]
-
-#+begin_src jupyter-python :session MiniProject2 :exports both
 f,ax = plt.subplots(1,2,figsize=(16,8))
 sns.histplot(log_ko[s1:s2],ax=ax[0],kde=True)
 probplot(log_ko[s1:s2],plot=ax[1])
